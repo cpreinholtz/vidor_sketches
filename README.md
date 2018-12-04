@@ -11,8 +11,11 @@ BetaPhase...
 Arduino w/ IMU:
 https://github.com/ozzmaker/BerryIMU/tree/master/arduino-BerryIMU
 
-Complimentary filter:
+IMU datasheet:
+https://cdn-shop.adafruit.com/datasheets/LSM9DS0.pdf
+
+Complimentary filter explanation:
 https://www.youtube.com/watch?v=whSw42XddsU
 
-AfroESC:
+AfroESC user manual:
 https://arduino.ua/docs/AfroESC30A.pdf
