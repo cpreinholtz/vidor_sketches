@@ -4,7 +4,20 @@
 
   check if it is in bypass mode?  prob dont want a fifo here? idk really... maybe this would be a cool design consideration?
   
-  
+  if (LSM9DS0){//For BerryIMUv1
+  //Enable accelerometer
+  //writeTo(LSM9DS0_ACC_ADDRESS,LSM9DS0_CTRL_REG1_XM, 0b01101111); //  z,y,x axis enabled, Hold MSB & LSB,  100Hz data rate  
+  writeTo(LSM9DS0_ACC_ADDRESS,LSM9DS0_CTRL_REG2_XM, 0b00100000); // +/- 16G full scale
+
+  //Enable the magnetometer
+  writeTo(LSM9DS0_MAG_ADDRESS,LSM9DS0_CTRL_REG5_XM, 0b11110000);   // Temp enable, M data rate = 50Hz
+  writeTo(LSM9DS0_MAG_ADDRESS,LSM9DS0_CTRL_REG6_XM, 0b01100000);   // +/-12gauss
+  writeTo(LSM9DS0_MAG_ADDRESS,LSM9DS0_CTRL_REG7_XM, 0b00000000);   // Continuous-conversion mode
+
+  // Enable Gyro
+  writeTo(LSM9DS0_GYR_ADDRESS, LSM9DS0_CTRL_REG1_G, 0b00001111); // Normal power mode, all axes enabled
+  writeTo(LSM9DS0_GYR_ADDRESS, LSM9DS0_CTRL_REG4_G, 0b10110000); // Hold MSB & LSB, 2000 dps full scale
+}
   
   
 
