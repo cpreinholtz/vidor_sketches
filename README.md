@@ -27,8 +27,8 @@ BetaPhase...
 General Arduino:
 https://www.arduino.cc/reference/en/
 
-Arduino Wifi:
-https://www.arduino.cc/en/Reference/WiFi
+Arduino Wifi(Vidor):
+https://www.arduino.cc/en/Reference/WiFiNINA
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
