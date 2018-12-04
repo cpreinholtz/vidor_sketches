@@ -23,6 +23,7 @@ BetaPhase...
 # References:
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 General Arduino:
 https://www.arduino.cc/reference/en/
 
@@ -30,6 +31,7 @@ Arduino Wifi:
 https://www.arduino.cc/en/Reference/WiFi
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 Ozzmaker Repo... Arduino w/ IMU:
 https://github.com/ozzmaker/BerryIMU/tree/master/arduino-BerryIMU
 
@@ -41,6 +43,7 @@ https://stackoverflow.com/questions/49467573/convert-twos-complement-left-justif
 (consider trying just 8bit precision??),  also try the shift operations rather than odd typecasting??
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 AfroESC user manual:
 https://arduino.ua/docs/AfroESC30A.pdf
 
@@ -48,6 +51,7 @@ Servo, ESC control:
 https://www.arduino.cc/en/Reference/Servo
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 Complimentary filter explanation:
 https://www.youtube.com/watch?v=whSw42XddsU
 
