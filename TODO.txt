@@ -1,14 +1,20 @@
-TODO List:
+# TODO List:
 
-Read the LM datasheet to see expected buffervalues??
+# Read the LM datasheet to see expected buffervalues??
+
+  check if it is in bypass mode?  prob dont want a fifo here? idk really... maybe this would be a cool design consideration?
+  
+  
+  
+  
 
 
-Add conditional print statments to make debugging easier:
+# Add conditional print statments to make debugging easier:
   this could be via Serial in, 1,2,3,4 etc prints different phases of the acc measurments to see where the error/ latch is occouring!? this would seriously clean up the printing and make it readable.
 
 
 
-add a float printf equivilent: (psudocode below)
+# add a float printf equivilent: (psudocode below)
 printf(float val, int pre_dec_places){
    pre_dec_places=10^pre_dec_places;
    while (|val|<pre_dec_places){
@@ -19,4 +25,4 @@ printf(float val, int pre_dec_places){
 }
 
 
-test ATAN potential: this would only give us up to 180 degrees of measurment on acc but thats probably okay.
+# test ATAN potential: this would only give us up to 180 degrees of measurment on acc but thats probably okay.
