@@ -14,32 +14,37 @@
 
 
 
-int epoch=0;
-float loop_period=0.02;
+
+float LOOP_PERIOD=0.02;
 bool UPSIDEDOWN=false;
+int epoch=0;
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void loop() {
- 
+  float ax, ay, gx, gy, gz, h;
+  float cx=0.0, cy=0.0, cz=0.0, px=0.0, py=0.0, pz=0.0;
+
+  while(1){
   unsigned long startTime = millis();
   
-  float ax, ay, gx, gy, gz, h;
-  if(UPSIDEDOWN){
-    get_acc_upsidedown(ax, ay);
-    get_gyro_rate_upsidedown(gx, gy, gz);
-    get_mag_upsidedown(h);
-  }
-  else{
-    get_acc(ax, ay);
-    get_gyro_rate(gx, gy, gz);
-    get_mag(h);
-  }
+
+  poll_sensor(ax, ay, gx, gy, gz, h);
+  px=get_gyro_pos(px,gx);//px=get_gyro_pos(cx,gx);
+  //py=get_gyro_pos(cy,gy);
+  //pz=get_gyro_pos(cz,gz);
+  
+  
+  cf(cx, ax, px);
+  //cf(cy, ay, py);
+  //cf(cz, h,  pz);
 
 
-
-  print_conditional(ax,ay,gx,gy,gz,h);
+  print_conditional(ax,ay,gx,gy,gz,h, cx, cy, px, py, pz);
   regulate_time(startTime);
+  }//while (1)
+ 
+
 }
 
 

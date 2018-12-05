@@ -14,12 +14,12 @@ void regulate_time(unsigned long startTime){
   
   epoch = epoch +1;
   //Each loop should be  20ms.
-  if(millis() - startTime > (loop_period*1000) ){
+  if(millis() - startTime > (LOOP_PERIOD*1000) ){
     Serial.print("TOO SLOW!!!!: loop time (ms)= ");
     Serial.print(millis() - startTime);
   }
   
-  while(millis() - startTime < (loop_period*1000))
+  while(millis() - startTime < (LOOP_PERIOD*1000))
   {
     delay(1);
   }
@@ -33,7 +33,7 @@ void regulate_utime(unsigned long startTime){
   epoch = epoch +1;
 
   //Each loop should be at least 20ms.
-  while(micros() - startTime < (loop_period*1000000))
+  while(micros() - startTime < (LOOP_PERIOD*1000000))
   {
     delayMicroseconds(1);
   }

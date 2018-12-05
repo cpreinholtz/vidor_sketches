@@ -6,35 +6,110 @@ byte incomingByte ='0';
 
 
 
-void print_conditional(float ax,float ay,float gx,float gy,float gz,float h){
-  if (Serial.available() > 0) {
-    incomingByte = Serial.read();
-  }
-  switch (incomingByte){
-  case 'x'://print x gyro and acc unfiltered
-    Serial.print(" ax ");Serial.print(ax);
-    Serial.print("\t\tgx ");Serial.print(gx);    
-    Serial.println();
-    break;
-   
-  case 'y':
-    Serial.print(" ay ");Serial.print(ay);
-    Serial.print("\t\tgy ");Serial.print(gy);    
-    Serial.println();
+void print_conditional(float ax,float ay,float gx,float gy,float gz,float h,float cx,float cy, float px, float py, float pz){
 
-    break;
+  //float frequency =1/LOOPPERIOD;
 
-   case 'h':
-    Serial.print(" heading ");Serial.print(h); 
-    Serial.print("\t\tgz ");Serial.print(gz);  
-    Serial.println();
+  if (epoch%2==0){
 
-    break;
+
     
-  default:
+    if (Serial.available() > 0) {
+      incomingByte = Serial.read();
+    }
+    switch (incomingByte){
+    case 'x'://print x gyro and acc unfiltered
+      Serial.print(" ax ");Serial.print(ax);
+      Serial.print("\t\t");
+      Serial.print(" gx ");Serial.print(gx);    
+      Serial.println();
+      break;
+     
+    case 'y':
+      Serial.print(" ay ");Serial.print(ay);
+      Serial.print("\t\t");
+      Serial.print(" gy ");Serial.print(gy);    
+      Serial.println();
+  
+      break;
+  
+     case 'h':
+      Serial.print(" heading ");Serial.print(h); 
+      Serial.print("\t\t");
+      Serial.print(" gz ");Serial.print(gz);  
+      Serial.println();
+  
+      break;
+  
+      case 'c':
+      Serial.print(" cx ");Serial.print(cx); 
+      Serial.print("\t\t");
+      Serial.print(" ax ");Serial.print(ax);
+      Serial.print("\t\t");
+      Serial.print(" gx ");Serial.print(gx); 
+      Serial.println();
+      break;
+      
+      case 'C':
+      Serial.print(" cy ");Serial.print(cy); 
+      Serial.print("\t\t");
+      Serial.print(" ay ");Serial.print(ay);
+      Serial.print("\t\t");
+      Serial.print(" gy ");Serial.print(gy); 
+      Serial.println();
+      break;
+  
+      case '-':
+        if(G>0.02)G=G-0.01;
+        else G = 0.01;
+        incomingByte ='g';
+      break;
+      
+      case '+':
+        if(G<0.98)G=G+0.01;
+        else G=0.99;
+        incomingByte ='g';
+      break;
+      
+      case 'g':
+      Serial.print(" cx ");Serial.print(cx); 
+      Serial.print("\t\t");
+      Serial.print(" ax ");Serial.print(ax);
+      Serial.print("\t\t");
+      Serial.print(" gx ");Serial.print(gx);
+      Serial.print("\t\t");
+      Serial.print(" px ");Serial.print(px);
+      Serial.print("\t\t");  
+      Serial.print(" G_GAIN ");Serial.print(G);
+      Serial.println();
+      break;
 
-    break;
-   
+      case 'G':
+      Serial.print(" cy ");Serial.print(cy); 
+      Serial.print("\t\t");
+      Serial.print(" ay ");Serial.print(ay);
+      Serial.print("\t\t");
+      Serial.print(" gy ");Serial.print(gy);
+      Serial.print("\t\t");
+      Serial.print(" py ");Serial.print(py);
+      Serial.print("\t\t");  
+      Serial.print(" G_GAIN ");Serial.print(G);
+      Serial.println();
+      break;
+      
+      case 'p':
+      Serial.print(" gx ");Serial.print(gx);
+      Serial.print("\t\t");
+      Serial.print(" px ");Serial.print(px);
+      Serial.println();
+      break;
+      
+    default:
+  
+      break;
+     
+    }
+  
   }
   
 }

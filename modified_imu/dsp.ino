@@ -20,22 +20,32 @@ int bytes_to_int(byte ls,byte ms){
 
 
 
-const float GA = 0.97;         // complementary filter constant
-const float AA = (1-GA);        // complementary filter constant
+float G = 0.70;         // complementary filter constant
+float A = (1-G);        // complementary filter constant
 
 
 
-void compute_compliment(float &val, float a, float g){
-    //Complementary filter used to combine the accelerometer and gyro values.  
-  /////////////////////////////////////////////////////////////////////
-  //OZZMAKER
-  //CFangleX=( GA*( CFangleX+(rate_gyr_x *DT) ) ) + ((AA) * AccXangle);
-  //CFangleY=( GA*( CFangleY+(rate_gyr_y *DT) ) ) + ((AA) * AccYangle);
-  //CPR
-  //CFangleX=( GA* ( ( CFangleX+rate_gyr_x ) *DT ) ) + ( ( AA ) * AccXangle );
-  //CFangleY=( GA* ( ( CFangleY+rate_gyr_y ) *DT ) ) + ( ( AA ) * AccYangle );
-  /////////////////////////////////////////////////////////////////////
+void cf(float &val, float a, float g){
+  
+  A= 1-G;
 
-
+  val= g*G + a*A;
+/*
+  Serial.print(" g ");Serial.print(g);
+  Serial.print("\t\t");
+  Serial.print(" G ");Serial.print(G);
+  Serial.print("\t\t");
+  Serial.print(" a ");Serial.print(a);
+  Serial.print("\t\t");
+  Serial.print(" A ");Serial.print(A);
+  Serial.print("\t\t");
+  Serial.print(" val ");Serial.print(val);
+  Serial.println();
+  */
+  
  
 }
+
+
+
+
