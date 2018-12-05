@@ -1,0 +1,23 @@
+
+
+Top view (with female header shown):
+
+    Y (pitch front side up = +Y direction)
+  ________
+ |      |_|
+ |        |  X (roll right side up = +X direction)
+  ________
+
+Z=up dir (+z = yaw to the right)
+
+
+
+
+
+If you need to flip upside down:
+	ACC: negate Z and X
+	GYRO: negate all
+eg: top view (cant see female header but still pictured)  (flipped along x axis)
+ ________
+|--|     |
+|________|
