@@ -3,7 +3,11 @@
 BetaPhase...
 
 
-
+# Vidor Pinout
+3v3 =	Vin
+SCL =	12
+SDA = 	11
+GND = 	GND
 
 
 # References:
