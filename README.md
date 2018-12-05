@@ -3,22 +3,6 @@
 BetaPhase...
 
 
-# TODO
-  See TODO.txt
-  
-  
-          if (Serial.available() > 0) {
-                incomingByte = Serial.read();
-          }
-          
-          switch (incomingByte){
-            case '1':
-              break;
-            case '2':
-              break;
-          }
-          
-
 
 # References:
 
@@ -55,5 +39,7 @@ https://www.arduino.cc/en/Reference/Servo
 Complimentary filter explanation:
 https://www.youtube.com/watch?v=whSw42XddsU
 
+Thinking in C++:
+https://www.micc.unifi.it/bertini/download/programmazione/TICPP-2nd-ed-Vol-one-printed.pdf
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
