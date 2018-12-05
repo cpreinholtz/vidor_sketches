@@ -1,5 +1,25 @@
 # TODO List:
 
+
+!!!!!!!!!!!!!!!Fix typeconversionS!!!  left justified, twos comp, etc./
+# TODO
+  See TODO.txt
+  
+  
+          if (Serial.available() > 0) {
+                incomingByte = Serial.read();
+          }
+          
+          switch (incomingByte){
+            case '1':
+              break;
+            case '2':
+              break;
+          }
+          
+          
+          
+          
 # Read the LM datasheet to see expected buffervalues??
 
   check if it is in bypass mode?  prob dont want a fifo here? idk really... maybe this would be a cool design consideration?
