@@ -21,7 +21,7 @@ void regulate_time(unsigned long startTime){
   
   while(millis() - startTime < (LOOP_PERIOD*1000))
   {
-    delay(1);
+    delayMicroseconds(1);
   }
       
 }

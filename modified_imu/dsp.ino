@@ -30,19 +30,7 @@ void cf(float &val, float a, float g){
   A= 1-G;
 
   val= g*G + a*A;
-/*
-  Serial.print(" g ");Serial.print(g);
-  Serial.print("\t\t");
-  Serial.print(" G ");Serial.print(G);
-  Serial.print("\t\t");
-  Serial.print(" a ");Serial.print(a);
-  Serial.print("\t\t");
-  Serial.print(" A ");Serial.print(A);
-  Serial.print("\t\t");
-  Serial.print(" val ");Serial.print(val);
-  Serial.println();
-  */
-  
+
  
 }
 

@@ -1,6 +1,7 @@
 
 
-
+#include "configs.h"
+#include "IMU.h"
 #define G_GAIN 0.070    // [deg/s/LSB]
 
 
@@ -17,6 +18,14 @@ void poll_sensor(float &ax, float &ay, float &gx, float &gy, float &gz, float &h
     get_mag(h);
   }
   
+}
+
+
+void setup_imu(void) {
+  if(ENABLE_IMU){
+    detectIMU();
+    enableIMU(); 
+  }
 }
 
 /////////////////////////////////////////////
@@ -111,7 +120,8 @@ float get_gyro_pos(float last, float rate ){
 }
 
 
-
+///////////////////////////////////////////////////////////
+//MAG
 void get_mag(float &head){
   
   byte buff[6]; 

@@ -10,13 +10,19 @@
 /*
   Modified by cpreinholtz in accordance to control theory
 */
-#include "IMU.h"
 
 
 
+
+
+bool ENABLE_WIFI = false;
+bool ENABLE_IMU = true;
+
+bool UPSIDEDOWN=false;
 
 float LOOP_PERIOD=0.02;
-bool UPSIDEDOWN=false;
+
+
 int epoch=0;
 
 
@@ -26,7 +32,7 @@ void loop() {
   float cx=0.0, cy=0.0, cz=0.0, px=0.0, py=0.0, pz=0.0;
 
   while(1){
-  unsigned long startTime = millis();
+  unsigned long start_loop = millis();
   
 
   poll_sensor(ax, ay, gx, gy, gz, h);
@@ -42,7 +48,11 @@ void loop() {
 
 
   print_conditional(ax,ay,gx,gy,gz,h, cx, cy, px, py, pz);
-  regulate_time(startTime);
+  send_telem(start_loop);
+  regulate_time(start_loop);
+
+
+
   }//while (1)
  
 
@@ -56,12 +66,16 @@ void loop() {
 ///////////////////////////////////////////////////////////////////////////////
 void setup() {
          // join i2c bus (address optional for master)
-
-  Serial.begin(115200);  // start serial for output  
-
-  detectIMU();
-  enableIMU();  
   pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(115200);  // start serial for output  
+  
+  setup_wifi();
+  setup_imu();
+
+ 
+  
 }
+
+
 
 

@@ -113,6 +113,24 @@ void print_conditional(float ax,float ay,float gx,float gy,float gz,float h,floa
   }
   
 }
+
+
+
+/*
+  Serial.print(" g ");Serial.print(g);
+  Serial.print("\t\t");
+  Serial.print(" G ");Serial.print(G);
+  Serial.print("\t\t");
+  Serial.print(" a ");Serial.print(a);
+  Serial.print("\t\t");
+  Serial.print(" A ");Serial.print(A);
+  Serial.print("\t\t");
+  Serial.print(" val ");Serial.print(val);
+  Serial.println();
+  */
+  
+
+
 /*
 
 void print_acc(void){
