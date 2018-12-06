@@ -30,14 +30,15 @@ void loop() {
   
 
   poll_sensor(ax, ay, gx, gy, gz, h);
-  px=get_gyro_pos(px,gx);//px=get_gyro_pos(cx,gx);
-  //py=get_gyro_pos(cy,gy);
-  //pz=get_gyro_pos(cz,gz);
+  //px=get_gyro_pos(px,gx);//gyro only
+  px=get_gyro_pos(cx,gx);//according to contols theory, feedback the filtered measurment
+  py=get_gyro_pos(cy,gy);
+  pz=get_gyro_pos(cz,gz);
   
   
   cf(cx, ax, px);
-  //cf(cy, ay, py);
-  //cf(cz, h,  pz);
+  cf(cy, ay, py);
+  cf(cz, h,  pz);
 
 
   print_conditional(ax,ay,gx,gy,gz,h, cx, cy, px, py, pz);

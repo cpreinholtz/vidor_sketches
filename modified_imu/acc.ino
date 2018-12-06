@@ -96,6 +96,7 @@ float get_gyro_pos(float last, float rate ){
   
   float delta =LOOP_PERIOD * rate;  
   float pos= ( delta  + last);
+  
 
   Serial.print(" rate ");Serial.print(rate);
   Serial.print("\t\t");
