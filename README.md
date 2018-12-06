@@ -2,6 +2,11 @@
 
 BetaPhase...
 
+# Vidor Pinout
+TODO:
+  Watchdog for commands
+  Presure Soensor
+  experiment with udp telem?
 
 # Vidor Pinout
 3v3 =	Vin
@@ -33,6 +38,9 @@ https://cdn-shop.adafruit.com/datasheets/LSM9DS0.pdf
 IMU Type (Twos comp, left justified):
 https://stackoverflow.com/questions/49467573/convert-twos-complement-left-justified-integer-into-regular-binary
 (consider trying just 8bit precision??),  also try the shift operations rather than odd typecasting??
+
+Presure sensor:
+https://cdn-shop.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
 
 Presure sensor repo:
 https://github.com/adafruit/Adafruit_BMP085_Unified
