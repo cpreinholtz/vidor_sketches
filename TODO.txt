@@ -1,10 +1,106 @@
 # TODO List:
+General:
+    struct pos  //type
+    {
+       float x,
+       float y,
+       float z
+       ...
+    };
+    typedef struct pos Position;
+    Position desired, error, measured;  //instantiate a struct of type record
+    
+    int idle =1;
+    int flight =2;
+    
+    int flight_mode = idle;
+    int motor_min= 900;
+    int motor_start= 1000;
+    int motor_max= 2000;
+      Servo fl;
+      Servo fr;
+      Servo bl;
+      Servo br;
+    
+    
+    
+    void setup_motors(void){
+      fl.attach(fl_pin, motor_min, motor_max);
+      fr.attach(fr_pin, motor_min, motor_max);
+      bl.attach(bl_pin, motor_min, motor_max);
+      br.attach(br_pin, motor_min, motor_max);
+      
+      if (!CALIBRATION_MODE){      
+        fl.writeMicroseconds(motor_min);
+        fr.writeMicroseconds(motor_min);
+        bl.writeMicroseconds(motor_min);
+        br.writeMicroseconds(motor_min);
+      }
+      
+    }
+    
+    void cal_esc(void){
+      Serial.flush();
+      if (CALIBRATION_MODE){      
+        fl.writeMicroseconds(motor_max);
+        fr.writeMicroseconds(motor_max);
+        bl.writeMicroseconds(motor_max);
+        br.writeMicroseconds(motor_max);
+      }
+      Serial.println("plug in ESCs, beeps will increase in pitch, followed by a beep matching the pitch, press any key to continue...");
+      while(!Serial.availiable());
+      Serial.flush();
+      
+      int i;
+      for(i=motor_max; i>=motor_min; i--){
+        fl.writeMicroseconds(i);
+        fr.writeMicroseconds(i);
+        bl.writeMicroseconds(i);
+        br.writeMicroseconds(i);
+        delay(2);
+      }
+      
+      Serial.println("Throtled down to the low end, two beeps of the same pitch should be emitted, press any key to cont");
+      while(!Serial.availiable());
+      Serial.flush();
+      
+      for(i=motor_min; i<=motor_start; i++){
+        fl.writeMicroseconds(i);
+        fr.writeMicroseconds(i);
+        bl.writeMicroseconds(i);
+        br.writeMicroseconds(i);
+        delay(2);
+      }
+      
+      Serial.println("Throtled up to start, three beeps should be emitted, press any key to cont");
+      while(!Serial.availiable());
+      Serial.flush();
+    
+    }
+    
+Calibration:
+1
+Set the radio throttle or servo tester to the highest position, then connect power to the ESC. The 
+motor should produce a series of initialization beeps increasing in pitch, followed by another beep 
+matching the pitch of the last initialization beep. This indicates that the calibration mode has been 
+entered, and the pulse length has been learned.
+2
+Move the stick or knob to the lowest position. Two beeps of the same pitch should be emitted. This
+indicates that the low pulse length has been learned. 
+3
+If the RC Car-style reversible mode has been 
+enabled (RC_PULS_NEUTRAL), move the stick or knob to the center, and wait for three beeps. This 
+indicates that the neutral (center) pulse length has been learned
+  
+  
   
 Sensor(Embedded Software)
   -Tune Cfilter
   -Consider characterising the noise in each axis
   -Vibration testing/ re-tune when the PID works?
   -Consider Kalman Filter? -can probably steal from other repo
+  -Pressure sensor
+  -
   
   
 LIPO contol with MKR VIDOR
@@ -17,7 +113,7 @@ CMND/STATUS (Embedded Software/ Ground Software)
     - create a struct for telem: https://forum.arduino.cc/index.php?topic=42681.0
     add a function for easy JSON creation.
     
-    struct record//type
+    struct pos  //type
     {
        float ms,
        float x,
@@ -25,40 +121,9 @@ CMND/STATUS (Embedded Software/ Ground Software)
     };
     typedef struct record Record;
     Record rinstance;//instantiate a struct of type record
-    
-    char start='{';
-    String end="}\n";
-    char comma=',';
-    
-    char* id[]={
-      "\"ms\"", //time
-      "\"te\"", //telem
-      "\"cx\"", //measured x
-      "\"cy\"", //measured y
-      "\"cz\"", //measured x
-      "\"dx\"", //desired x
-      "\"dy\"", //desired y
-      "\"dz\"", //desired z
-      "\"dt\"", //desired throttle
-    }
-    
-    int create_json(mytype data){
-      String str ="";
-      str.concat(start);
-      
-      str.concat(id[1]);
-      str.concat(data.time);
-      str.concat(comma);
-      
-      str.concat(id[2]);
-      str.concat(data.x);
-      str.concat(comma);
-      ...
-      str.concat(end);
-    }
-    
-    
-"This is string 4", "This is string 5","This is string 6"};
+
+
+
         
     
     -add failsafe for loosing connection/ corrupt data
