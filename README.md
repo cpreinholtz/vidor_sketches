@@ -16,9 +16,11 @@ GND = 	GND
 General Arduino:
 https://www.arduino.cc/reference/en/
 
-Arduino Wifi(Vidor):
+Arduino WifiNINA(Vidor):
 https://www.arduino.cc/en/Reference/WiFiNINA
 
+WIFI
+https://www.arduino.cc/en/Reference/WiFi
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Ozzmaker Repo... Arduino w/ IMU:

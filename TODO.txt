@@ -5,6 +5,10 @@ Sensor(Embedded Software)
   -Consider characterising the noise in each axis
   -Vibration testing/ re-tune when the PID works?
   -Consider Kalman Filter? -can probably steal from other repo
+  
+  
+LIPO contol with MKR VIDOR
+  -assess battery options?
 
 CMND/STATUS (Embedded Software/ Ground Software)
 &&&****ADD ARDUINO_SECRETS TO GITIGNORE****&&&
