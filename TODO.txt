@@ -1,61 +1,100 @@
 # TODO List:
+  
+Sensor(Embedded Software)
+  -Tune Cfilter
+  -Consider characterising the noise in each axis
+  -Vibration testing/ re-tune when the PID works?
+  -Consider Kalman Filter? -can probably steal from other repo
 
+CMND/STATUS (Embedded Software/ Ground Software)
+&&&****ADD ARDUINO_SECRETS TO GITIGNORE****&&&
+    - get UDP to PC working. (bi-directional)  WIFI_NINA
+    
+    - create a struct for telem: https://forum.arduino.cc/index.php?topic=42681.0
+    add a function for easy JSON creation.
+    
+    struct record//type
+    {
+       float ms,
+       float x,
+       ...
+    };
+    typedef struct record Record;
+    Record rinstance;//instantiate a struct of type record
+    
+    char start='{';
+    String end="}\n";
+    char comma=',';
+    
+    char* id[]={
+      "\"ms\"", //time
+      "\"te\"", //telem
+      "\"cx\"", //measured x
+      "\"cy\"", //measured y
+      "\"cz\"", //measured x
+      "\"dx\"", //desired x
+      "\"dy\"", //desired y
+      "\"dz\"", //desired z
+      "\"dt\"", //desired throttle
+    }
+    
+    int create_json(mytype data){
+      String str ="";
+      str.concat(start);
+      
+      str.concat(id[1]);
+      str.concat(data.time);
+      str.concat(comma);
+      
+      str.concat(id[2]);
+      str.concat(data.x);
+      str.concat(comma);
+      ...
+      str.concat(end);
+    }
+    
+    
+"This is string 4", "This is string 5","This is string 6"};
+        
+    
+    -add failsafe for loosing connection/ corrupt data
+    
+    - Side task: get a streaming ability to server mysql to capture timestamps and values.  Accept JSON in the following format?:
+      {"time":,"telem":{"cx": , "cy":, "cz":, "dx":,"dy":,"dz":,"dt":...}}
+         time(ms)   measured pos(deg),    desired pos(deg),   desired throtle(deg)
+         Plot the MYSQL values>? need to make a db.
+    
+PWM (Embedded Software)
+  -test arduino libraries with ESC 
+  -test vidor output(5v pwm vs 3v3)!!
+  -Create function/wrapper for writing to the ESCs
+  -Create Calibrate ESC function
+  
+PID (Embedded Software)
+  -Impliment Flight Controller (one per axis?)
+  -esure KI windup cannot happen on the ground
+  -Tune
+  
+General (Embedded Software)
+  -add failsafe for loosing connection/ corrupt data
 
-!!!!!!!!!!!!!!!Fix typeconversionS!!!  left justified, twos comp, etc./
-# TODO
-  See TODO.txt
+Hardware
+  -Use Protoboard
+  -Buy headers (4x3PIN for ESCs), potentially more for redundancy, RC controller
+  -Buy RC contoller
+  -Mount the IMU on rubber onto the protoboard. Consider soldering in place to add mass and ruberixing the whole flight board?
+  -Charge batteries
+  -Add "RollCage" Before flight
+  -Add "Killswitch" before flight
   
   
-          if (Serial.available() > 0) {
-                incomingByte = Serial.read();
-          }
-          
-          switch (incomingByte){
-            case '1':
-              break;
-            case '2':
-              break;
-          }
-          
-          
-          
-          
-# Read the LM datasheet to see expected buffervalues??
-
-  check if it is in bypass mode?  prob dont want a fifo here? idk really... maybe this would be a cool design consideration?
   
-  if (LSM9DS0){//For BerryIMUv1
-  //Enable accelerometer
-  //writeTo(LSM9DS0_ACC_ADDRESS,LSM9DS0_CTRL_REG1_XM, 0b01101111); //  z,y,x axis enabled, Hold MSB & LSB,  100Hz data rate  
-  writeTo(LSM9DS0_ACC_ADDRESS,LSM9DS0_CTRL_REG2_XM, 0b00100000); // +/- 16G full scale
-
-  //Enable the magnetometer
-  writeTo(LSM9DS0_MAG_ADDRESS,LSM9DS0_CTRL_REG5_XM, 0b11110000);   // Temp enable, M data rate = 50Hz
-  writeTo(LSM9DS0_MAG_ADDRESS,LSM9DS0_CTRL_REG6_XM, 0b01100000);   // +/-12gauss
-  writeTo(LSM9DS0_MAG_ADDRESS,LSM9DS0_CTRL_REG7_XM, 0b00000000);   // Continuous-conversion mode
-
-  // Enable Gyro
-  writeTo(LSM9DS0_GYR_ADDRESS, LSM9DS0_CTRL_REG1_G, 0b00001111); // Normal power mode, all axes enabled
-  writeTo(LSM9DS0_GYR_ADDRESS, LSM9DS0_CTRL_REG4_G, 0b10110000); // Hold MSB & LSB, 2000 dps full scale
-}
+  Done
+    -Read Gyro/Accelerometer
+  
+    
+  
   
   
 
 
-# Add conditional print statments to make debugging easier:
-  this could be via Serial in, 1,2,3,4 etc prints different phases of the acc measurments to see where the error/ latch is occouring!? this would seriously clean up the printing and make it readable.
-
-
-
-# add a float printf equivilent: (psudocode below)
-printf(float val, int pre_dec_places){
-   pre_dec_places=10^pre_dec_places;
-   while (|val|<pre_dec_places){
-     print (0);
-     pre_dec_places/=10;
-   }
-   print (val)
-}
-
-
-# test ATAN potential: this would only give us up to 180 degrees of measurment on acc but thats probably okay.

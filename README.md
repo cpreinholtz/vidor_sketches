@@ -44,6 +44,12 @@ https://www.arduino.cc/en/Reference/Servo
 Complimentary filter explanation:
 https://www.youtube.com/watch?v=whSw42XddsU
 
+more complimentary filter (time constants):
+https://robotics.stackexchange.com/questions/1717/how-to-determine-the-parameter-of-a-complementary-filter
+
+Python+msql??
+https://moderndata.plot.ly/graph-data-from-mysql-database-in-python/
+
 Thinking in C++:
 https://www.micc.unifi.it/bertini/download/programmazione/TICPP-2nd-ed-Vol-one-printed.pdf
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
