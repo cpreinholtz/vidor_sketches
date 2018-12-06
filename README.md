@@ -21,6 +21,7 @@ https://www.arduino.cc/en/Reference/WiFiNINA
 
 WIFI
 https://www.arduino.cc/en/Reference/WiFi
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Ozzmaker Repo... Arduino w/ IMU:
@@ -32,6 +33,9 @@ https://cdn-shop.adafruit.com/datasheets/LSM9DS0.pdf
 IMU Type (Twos comp, left justified):
 https://stackoverflow.com/questions/49467573/convert-twos-complement-left-justified-integer-into-regular-binary
 (consider trying just 8bit precision??),  also try the shift operations rather than odd typecasting??
+
+Presure sensor repo:
+https://github.com/adafruit/Adafruit_BMP085_Unified
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
