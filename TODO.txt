@@ -9,6 +9,53 @@ Sensor(Embedded Software)
 CMND/STATUS (Embedded Software/ Ground Software)
     - get UDP to PC working. (bi-directional)  WIFI_NINA
     
+    - create a struct for telem: https://forum.arduino.cc/index.php?topic=42681.0
+    add a function for easy JSON creation.
+    
+    struct record//type
+    {
+       float ms,
+       float x,
+       ...
+    };
+    typedef struct record Record;
+    Record rinstance;//instantiate a struct of type record
+    
+    char start='{';
+    String end="}\n";
+    char comma=',';
+    
+    char* id[]={
+      "\"ms\"", //time
+      "\"te\"", //telem
+      "\"cx\"", //measured x
+      "\"cy\"", //measured y
+      "\"cz\"", //measured x
+      "\"dx\"", //desired x
+      "\"dy\"", //desired y
+      "\"dz\"", //desired z
+      "\"dt\"", //desired throttle
+    }
+    
+    int create_json(mytype data){
+      String str ="";
+      str.concat(start);
+      
+      str.concat(id[1]);
+      str.concat(data.time);
+      str.concat(comma);
+      
+      str.concat(id[2]);
+      str.concat(data.x);
+      str.concat(comma);
+      ...
+      str.concat(end);
+    }
+    
+    
+"This is string 4", "This is string 5","This is string 6"};
+        
+    
     -add failsafe for loosing connection/ corrupt data
     
     - Side task: get a streaming ability to server mysql to capture timestamps and values.  Accept JSON in the following format?:
