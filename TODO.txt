@@ -7,6 +7,7 @@ Sensor(Embedded Software)
   -Consider Kalman Filter? -can probably steal from other repo
 
 CMND/STATUS (Embedded Software/ Ground Software)
+&&&****ADD ARDUINO_SECRETS TO GITIGNORE****&&&
     - get UDP to PC working. (bi-directional)  WIFI_NINA
     
     - create a struct for telem: https://forum.arduino.cc/index.php?topic=42681.0
