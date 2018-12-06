@@ -71,7 +71,8 @@ PWM (Embedded Software)
   -Create Calibrate ESC function
   
 PID (Embedded Software)
-  -Impliment Flight Controller
+  -Impliment Flight Controller (one per axis?)
+  -esure KI windup cannot happen on the ground
   -Tune
   
 General (Embedded Software)
