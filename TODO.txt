@@ -1,14 +1,71 @@
 # TODO List:
 General:
-    struct pos  //type
+    struct xyz  //type
     {
        float x,
        float y,
        float z
        ...
     };
-    typedef struct pos Position;
-    Position desired, error, measured;  //instantiate a struct of type record
+    typedef struct xyz Position;
+    
+    struct pid_constants  //type
+    {
+       float kp,
+       float ki,
+       float kd,
+       float min,
+       float max
+       ...
+    };
+    typedef struct pid_constants PidConstants;
+    PidConstants kroll,kpitch,kyaw,kheight;
+    
+    kroll.kp=1.0;
+    kroll.ki=0.0;
+    kroll.kd=0.0;    
+    kroll.min= motor_max-motor_start *  -0.1 ;
+    kroll.max= motor_max-motor_start *   0.1 ;
+    
+    kpitch.kp=1.0;
+    kpitch.ki=0.0;
+    kpitch.kd=0.0;
+    kpitch.min= motor_max-motor_start * -0.1 ;
+    kpitch.max= motor_max-motor_start *  0.1 ;
+    
+    kyaw.kp=0.2;
+    kyaw.ki=0.0;
+    kyaw.kd=0.0;
+    kyaw.min= motor_max-motor_start  *  -0.1 ;
+    kyaw.max= motor_max-motor_start *  0.1 ;
+    
+    kheight.kp=1.0;
+    kheight.ki=0.0;
+    kheight.kd=0.0;    
+    kheight.min= motor_max-motor_start *  -0.1 ;
+    kheight.max= motor_max-motor_start *   0.1 ;
+    
+    struct throttle_container  //type
+    {
+       int fl,
+       int fr,
+       int bl,
+       int br
+       ...
+    };
+    typedef struct throttle_container ThrottleContainer;
+    ThrottleContainer throttle;
+    
+    struct attitude  //type
+    {
+       float roll,
+       float pitch,
+       float yaw
+       ...
+    };
+    typedef struct attitude Attitude;
+    
+    Attitude desired, measured, errorp, errord, errori;  //instantiate a struct of type record
     
     int idle =1;
     int flight =2;
@@ -21,6 +78,80 @@ General:
       Servo fr;
       Servo bl;
       Servo br;
+      
+      
+   void get_pid_roll(){
+        float result=0.0;      
+       
+        result+=kroll.kp*errorp.roll;//P
+        result+=kroll.ki*errori.roll;//I
+        result+=kroll.kd*errord.roll; //D
+        
+        if (result>=kroll.max){
+            result=kroll.max;
+            Serial.println("
+        }
+   
+   }
+    
+    void setup_pid(void){
+        errorp.roll=0.0;
+        errorp.pitch=0.0;
+        errorp.yaw=0.0;
+        
+        errori.roll=0.0;
+        errori.pitch=0.0;
+        errori.yaw=0.0;
+        
+        errord.roll=0.0;
+        errord.pitch=0.0;
+        errord.yaw=0.0;
+        
+        desired.roll=0.0;
+        desired.pitch=0.0;
+        desired.yaw=0.0;
+        
+        measured.roll=0.0;
+        measured.pitch=0.0;
+        measured.yaw=0.0;
+    
+    }
+    
+    void get_attitude_error(void){
+        Attitude temp;        
+        temp.roll=desired.roll-measured.roll;
+        temp.pitch=desired.pitch-measured.pitch;
+        temp.yaw=desired.yaw-measured.yaw;
+        
+       //D //must do this before P to get difference    
+        errord.roll=temp.roll-errorp.roll;    //  missing divide by delta t (acount for this in kd 
+        errord.pitch=temp.pitch-errorp.pitch;
+        errord.yaw=temp.yaw-errorp.yaw;
+        
+        
+        //I
+        if (mode==flight){
+            errori.roll+=temp.roll;
+            errori.pitch+=temp.pitch;
+            errori.yaw+=temp.yaw;
+        }
+        else{
+            errori.roll=0.0;
+            errori.pitch=0.0;
+            errori.yaw=0.0;
+        }
+        
+        //P        
+        errorp.roll=temp.roll;
+        errorp.pitch=temp.pitch;
+        errorp.yaw=temp.yaw;
+        
+    }
+    
+    
+    
+    
+    
     
     
     
@@ -100,33 +231,23 @@ Sensor(Embedded Software)
   -Vibration testing/ re-tune when the PID works?
   -Consider Kalman Filter? -can probably steal from other repo
   -Pressure sensor
-  -
+  -Include vector addition (i j k=rect, and mag, theta, phi)
+  -integrate Z acc magnitude to get z velocity to help with height measurments
+  -incorperate velocity and position tracking??
+  - Flip roll b/c + = right wing down (roll to the right)
+  - +pitch = front up
   
   
 LIPO contol with MKR VIDOR
   -assess battery options?
 
 CMND/STATUS (Embedded Software/ Ground Software)
-&&&****ADD ARDUINO_SECRETS TO GITIGNORE****&&&
     - get UDP to PC working. (bi-directional)  WIFI_NINA
+    - try to make UDP faster and see if it is better than "client"
     
-    - create a struct for telem: https://forum.arduino.cc/index.php?topic=42681.0
     add a function for easy JSON creation.
-    
-    struct pos  //type
-    {
-       float ms,
-       float x,
-       ...
-    };
-    typedef struct record Record;
-    Record rinstance;//instantiate a struct of type record
 
-
-
-        
-    
-    -add failsafe for loosing connection/ corrupt data
+    -add failsafe for loosing connection/ corrupt data  (WATCHDOG for desired)
     
     - Side task: get a streaming ability to server mysql to capture timestamps and values.  Accept JSON in the following format?:
       {"time":,"telem":{"cx": , "cy":, "cz":, "dx":,"dy":,"dz":,"dt":...}}
@@ -139,10 +260,11 @@ PWM (Embedded Software)
   -Create function/wrapper for writing to the ESCs
   -Create Calibrate ESC function
   
-PID (Embedded Software)
-  -Impliment Flight Controller (one per axis?)
+Flight Controller (Embedded Software)
+  -Impliment PID Flight Controller (one per axis?)
   -esure KI windup cannot happen on the ground
-  -Tune
+  -Tune PID
+  -add hover and killswitch
   
 General (Embedded Software)
   -add failsafe for loosing connection/ corrupt data
@@ -154,7 +276,7 @@ Hardware
   -Mount the IMU on rubber onto the protoboard. Consider soldering in place to add mass and ruberixing the whole flight board?
   -Charge batteries
   -Add "RollCage" Before flight
-  -Add "Killswitch" before flight
+  -Add "Killswitch" before flight (can be done in sw?)
   
   
   
