@@ -1,6 +1,10 @@
 # TODO List:
 General:
 
+Install ADAFRUIT SENSOR and ADAFRUIT BMP805
+Install the BERRY IMU as a library:
+https://www.arduino.cc/en/Guide/Libraries
+
     
     struct pid_constants  //type
     {
