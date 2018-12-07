@@ -1,67 +1,392 @@
 # TODO List:
+General:
+
+Install ADAFRUIT SENSOR and ADAFRUIT BMP805
+Install the BERRY IMU as a library:
+https://www.arduino.cc/en/Guide/Libraries
+
+    
+    struct pid_constants  //type
+    {
+       float kp,
+       float ki,
+       float kd,
+       float min,
+       float max
+       ...
+    };
+    typedef struct pid_constants PidConstants;
+    
+    
+    struct pid_error  //type
+    {
+       float p,
+       float i,
+       float d,
+       ...
+    };
+    typedef struct pid_error PidError;
+
+    struct throttle_container  //type
+    {
+       int fl,
+       int fr,
+       int bl,
+       int br
+    };
+    typedef struct throttle_container ThrottleContainer;
+
+    
+    struct attitude  //type
+    {
+       float roll,
+       float pitch,
+       float yaw
+       //,height//...
+    };
+    typedef struct attitude Attitude;    
+    
+    
+    //constants
+    const int idle =1;      //mode
+    const int flight =2;    //mode
+    const int orientation=4;//mode
+    const int takeoff=8;    //mode
+    
+    const int motor_min= 900;
+    const int motor_start= 1000;
+    const int motor_max= 2000;
+    
+    const int fl_pin=;
+    const int fr_pin=;
+    const int bl_pin=;
+    const int br_pin=;
+    
+    const float i_error_max=100* LOOP_PERIOD;   //100 degrees of integrated error maximun (factoring in that int error is not scaled by dt)
+        //@50 Hz this will cap after just seconds of 1 degree error...  
+    
+    //global variables, objects and structs    
+    int mode = idle;
+    Servo fl ,fr, bl, br;
+    Attitude desired, measured;
+    ThrottleContainer throttle;
+    PidError eroll, epitch, eyaw;
+    PidConstants kroll,kpitch,kyaw,kheight;
+    
+    void setup_pid(void){
+        //just set these to 0 for startup!    
+        eroll.p=0.0;
+        eroll.i=0.0;
+        eroll.d=0.0;        
+        epitch.p=0.0;
+        epitch.i=0.0;
+        epitch.d=0.0;        
+        eyaw.p=0.0;
+        eyaw.i=0.0;
+        eyaw.d=0.0;        
+        desired.roll=0.0;
+        desired.pitch=0.0;
+        desired.yaw=0.0;        
+        measured.roll=0.0;
+        measured.pitch=0.0;
+        measured.yaw=0.0;
+        
+        //Tune-able Parameters!!! 
+        kroll.kp=1.0;
+        kroll.ki=0.0 * LOOP_PERIOD;
+        kroll.kd=0.0 / LOOP_PERIOD;    
+        kroll.min= motor_max-motor_start *  -0.1 ;
+        kroll.max= motor_max-motor_start *   0.1 ;
+
+        kpitch.kp=1.0;
+        kpitch.ki=0.0 * LOOP_PERIOD;
+        kpitch.kd=0.0 / LOOP_PERIOD;
+        kpitch.min= motor_max-motor_start * -0.1 ;
+        kpitch.max= motor_max-motor_start *  0.1 ;
+
+        kyaw.kp=0.2;
+        kyaw.ki=0.0 * LOOP_PERIOD;
+        kyaw.kd=0.0 / LOOP_PERIOD;
+        kyaw.min= motor_max-motor_start  *  -0.1 ;
+        kyaw.max= motor_max-motor_start *  0.1 ;
+
+        kheight.kp=1.0;
+        kheight.ki=0.0 * LOOP_PERIOD;
+        kheight.kd=0.0 / LOOP_PERIOD;    
+        kheight.min= motor_max-motor_start *  -0.1 ;
+        kheight.max= motor_max-motor_start *   0.1 ;
+    
+    }
+    
+    
+    void setup_motors(void){
+      fl.attach(fl_pin, motor_min, motor_max);
+      fr.attach(fr_pin, motor_min, motor_max);
+      bl.attach(bl_pin, motor_min, motor_max);
+      br.attach(br_pin, motor_min, motor_max);
+      
+      if (!CALIBRATION_MODE){      
+        fl.writeMicroseconds(motor_min);
+        fr.writeMicroseconds(motor_min);
+        bl.writeMicroseconds(motor_min);
+        br.writeMicroseconds(motor_min);
+      }
+      
+    }
+    
+    
+    
+      
+
+    
+
+    
+    void get_single_errror(PidError & err, float desire, float measure){
+        
+        //if(desired-measured>180.0)desied-=180.0;//normalise desired to get the closest path to stability
+        //else if(measured-desired>180.0)desied+=180.0;
+        
+        float temp=desire-measure;
+        err.d=temp-err.d;
+        
+        err.p=temp;
+        if(mode!=flight){
+            err.i=0.0;
+        }else{
+            err.i+=temp;
+            if (err.i>=i_error_max)err.i=i_error_max;
+            else if (err.i<=-i_error_max)err.i=-i_error_max;
+        }
+    }
+    
+    //accounts for the 0-360 range near north
+    void get_yaw_errror(PidError & err, float desire, float measure){
+        if(desired-measured>180.0)desied-=180.0;//normalise desired to get the closest path to stability
+        else if(measured-desired>180.0)desied+=180.0;
+        
+        float temp=desire-measure;
+        err.d=temp-err.d;
+        err.i+=temp;
+        err.p=temp;
+        if(mode!=flight){
+            err.i=0.0;
+        }
+    }
+    
+    //calculates kp*p+ki*i+kd*d and returns result after max and min is applied
+    float get_pid_result(PidError err, PidConstants constant){
+        float result=0.0;      
+       
+        result+=constant.kp*err.p;//P
+        result+=constant.ki*err.i;//I
+        result+=constant.kd*err.d; //D
+        
+        if (result>=constant.max){
+            result=constant.max;
+            Serial.println("PID MAX HIT!");
+        }
+        else if(result<=constant.min){
+            result=constant.min;
+            Serial.println("PID MIN HIT!");
+        }
+        return result;   
+   }
+    
+
+    
+    
+    
+  
+    //sides
+    void apply_roll(ThrottleContainer &throt, float res){
+        if (res>0.0){   //roll right for + desired roll
+            throt.fl+=res;
+            throt.bl+=res;
+        }
+        else{
+            throt.fr+=res;
+            throt.br+=res;
+        }            
+    }
+    
+    //front/back 
+    void apply_pitch(ThrottleContainer &throt, float res){
+        if (res>0.0){   //pitch forward up for + desired pitch
+            throt.fl+=res;
+            throt.fr+=res;
+        }
+        else{
+            throt.bl+=res;
+            throt.br+=res;
+        }            
+    }
+    
+   //opposites
+   void apply_yaw(ThrottleContainer &throt, float res){
+        if (res>0.0){   // yaw cw for + desired heading
+            throt.fr+=res;//fr spins ccw,
+            throt.bl+=res;//bl spins ccw,
+        }
+        else{
+            throt.fl+=res; //fl spins cw, 
+            throt.br+=res; //br spins cw, 
+        }            
+    }
+    
+    //all4
+    void apply_height(ThrottleContainer &throt, float res){
+
+            throt.fr+=res;//fr spins ccw,
+            throt.bl+=res;//bl spins ccw,
+            throt.fl+=res; //fl spins cw, 
+            throt.br+=res; //br spins cw,
+                    
+    }
+    
+    //cap at max and min
+    void limit_throttle(void){
+        if (throttle.fl>=motor_max)throttle.fl=motor_max;
+        else if (throttle.fl<=motor_min)throttle.fl=motor_min;
+        
+        if (throttle.fr>=motor_max)throttle.fr=motor_max;
+        else if (throttle.fr<=motor_min)throttle.fr=motor_min;
+        
+        if (throttle.bl>=motor_max)throttle.bl=motor_max;
+        else if (throttle.bl<=motor_min)throttle.bl=motor_min;
+        
+        if (throttle.br>=motor_max)throttle.br=motor_max;
+        else if (throttle.br<=motor_min)throttle.br=motor_min;
+    }
+    
+    
+    //gets errors for Attitudes
+    void get_all_errors(void){
+        get_single_error(eroll,desired.roll,measured.roll);
+        get_single_error(epitch,desired.pitch,measured.pitch);
+        get_yaw_error(eyaw,desired.yaw,measured.yaw);
+    }
+    
+    //gets (kp*p+ki*i+kd*d) and applies corrections to all throttle values
+    void apply_all_errors(){
+        apply_roll( throttle, get_pid_result(eroll,kroll) );
+        apply_pitch( throttle, get_pid_result(epitch,kpitch) );
+        apply_yaw( throttle, get_pid_result(eyaw,kyaw) );
+        apply_height( throttle, get_pid_result(eheight,kheight) );
+        limit_throttle();
+    }
+    
+    
+    void send_all_to_motors(void){
+        if(mode==flight||mode==takeoff){
+            fl.writeMicroseconds((int)throttle.fl);
+            fr.writeMicroseconds((int)throttle.fr);
+            bl.writeMicroseconds((int)throttle.bl);
+            br.writeMicroseconds((int)throttle.br);
+        }  
+    
+    }
+    
+    
+    float normalise(float throt){//takes a throtle uS value and normalises from 0-99
+    
+        if (throt<=motor_min) throt=0;
+        else if (throt>=motor_max) throt=0;
+    }
+    
+    void flight_control(void){
+        get_all_errors();
+        apply_all_errors();
+        send_all_to_motors();    
+    }
+    
+    
+    
+    
+    
+    
+
+    
+    void calibrate_esc(void){
+      Serial.flush();
+      if (CALIBRATION_MODE){      
+        fl.writeMicroseconds(motor_max);
+        fr.writeMicroseconds(motor_max);
+        bl.writeMicroseconds(motor_max);
+        br.writeMicroseconds(motor_max);
+      }
+      Serial.println("plug in ESCs, beeps will increase in pitch, followed by a beep matching the pitch, press any key to continue...");
+      while(!Serial.availiable());
+      Serial.flush();
+      
+      int i;
+      for(i=motor_max; i>=motor_min; i--){
+        fl.writeMicroseconds(i);
+        fr.writeMicroseconds(i);
+        bl.writeMicroseconds(i);
+        br.writeMicroseconds(i);
+        delay(1);
+      }
+      
+      Serial.println("Throtled down to the low end, two beeps of the same pitch should be emitted, press any key to cont");      
+      Serial.println("type \"n\" to skip the last step (sets throttle up to motor_start)");
+      while(!Serial.availiable());
+      
+      if (Serial.read()='n') return;
+      Serial.flush();
+      
+      for(i=motor_min; i<=motor_start; i++){
+        fl.writeMicroseconds(i);
+        fr.writeMicroseconds(i);
+        bl.writeMicroseconds(i);
+        br.writeMicroseconds(i);
+        delay(1);
+      }
+      
+      Serial.println("Throtled up to motor_start, three beeps should be emitted, press any key to cont");
+      while(!Serial.availiable());
+      Serial.flush();
+    
+    }
+    
+Calibration:
+1
+Set the radio throttle or servo tester to the highest position, then connect power to the ESC. The 
+motor should produce a series of initialization beeps increasing in pitch, followed by another beep 
+matching the pitch of the last initialization beep. This indicates that the calibration mode has been 
+entered, and the pulse length has been learned.
+2
+Move the stick or knob to the lowest position. Two beeps of the same pitch should be emitted. This
+indicates that the low pulse length has been learned. 
+3
+If the RC Car-style reversible mode has been 
+enabled (RC_PULS_NEUTRAL), move the stick or knob to the center, and wait for three beeps. This 
+indicates that the neutral (center) pulse length has been learned
+  
+  
   
 Sensor(Embedded Software)
   -Tune Cfilter
   -Consider characterising the noise in each axis
   -Vibration testing/ re-tune when the PID works?
   -Consider Kalman Filter? -can probably steal from other repo
+  -Pressure sensor
+  -Include vector addition (i j k=rect, and mag, theta, phi)
+  -integrate Z acc magnitude to get z velocity to help with height measurments
+  -incorperate velocity and position tracking??
+  - Flip roll b/c + = right wing down (roll to the right)
+  - +pitch = front up
   
   
 LIPO contol with MKR VIDOR
   -assess battery options?
 
 CMND/STATUS (Embedded Software/ Ground Software)
-&&&****ADD ARDUINO_SECRETS TO GITIGNORE****&&&
     - get UDP to PC working. (bi-directional)  WIFI_NINA
+    - try to make UDP faster and see if it is better than "client"
     
-    - create a struct for telem: https://forum.arduino.cc/index.php?topic=42681.0
     add a function for easy JSON creation.
-    
-    struct record//type
-    {
-       float ms,
-       float x,
-       ...
-    };
-    typedef struct record Record;
-    Record rinstance;//instantiate a struct of type record
-    
-    char start='{';
-    String end="}\n";
-    char comma=',';
-    
-    char* id[]={
-      "\"ms\"", //time
-      "\"te\"", //telem
-      "\"cx\"", //measured x
-      "\"cy\"", //measured y
-      "\"cz\"", //measured x
-      "\"dx\"", //desired x
-      "\"dy\"", //desired y
-      "\"dz\"", //desired z
-      "\"dt\"", //desired throttle
-    }
-    
-    int create_json(mytype data){
-      String str ="";
-      str.concat(start);
-      
-      str.concat(id[1]);
-      str.concat(data.time);
-      str.concat(comma);
-      
-      str.concat(id[2]);
-      str.concat(data.x);
-      str.concat(comma);
-      ...
-      str.concat(end);
-    }
-    
-    
-"This is string 4", "This is string 5","This is string 6"};
-        
-    
-    -add failsafe for loosing connection/ corrupt data
+
+    -add failsafe for loosing connection/ corrupt data  (WATCHDOG for desired)
     
     - Side task: get a streaming ability to server mysql to capture timestamps and values.  Accept JSON in the following format?:
       {"time":,"telem":{"cx": , "cy":, "cz":, "dx":,"dy":,"dz":,"dt":...}}
@@ -74,10 +399,12 @@ PWM (Embedded Software)
   -Create function/wrapper for writing to the ESCs
   -Create Calibrate ESC function
   
-PID (Embedded Software)
-  -Impliment Flight Controller (one per axis?)
+Flight Controller (Embedded Software)
+  -Impliment PID Flight Controller (one per axis?)
   -esure KI windup cannot happen on the ground
-  -Tune
+  -Tune PID
+  -add hover and killswitch
+  -add a normalise function to prevent the thing from taking off super high
   
 General (Embedded Software)
   -add failsafe for loosing connection/ corrupt data
@@ -89,12 +416,12 @@ Hardware
   -Mount the IMU on rubber onto the protoboard. Consider soldering in place to add mass and ruberixing the whole flight board?
   -Charge batteries
   -Add "RollCage" Before flight
-  -Add "Killswitch" before flight
+  -Add "Killswitch" before flight (can be done in sw?)
   
   
   
   Done
-    -Read Gyro/Accelerometer
+    -Read Gyro/Accelerometer (implimented, not tested or tuned)
   
     
   

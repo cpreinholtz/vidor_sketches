@@ -2,6 +2,11 @@
 
 BetaPhase...
 
+# Vidor Pinout
+TODO:
+  Watchdog for commands
+  Presure Soensor
+  experiment with udp telem?
 
 # Vidor Pinout
 3v3 =	Vin
@@ -21,6 +26,7 @@ https://www.arduino.cc/en/Reference/WiFiNINA
 
 WIFI
 https://www.arduino.cc/en/Reference/WiFi
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Ozzmaker Repo... Arduino w/ IMU:
@@ -33,13 +39,22 @@ IMU Type (Twos comp, left justified):
 https://stackoverflow.com/questions/49467573/convert-twos-complement-left-justified-integer-into-regular-binary
 (consider trying just 8bit precision??),  also try the shift operations rather than odd typecasting??
 
+Presure sensor:
+https://cdn-shop.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
+
+Presure sensor repo:
+https://github.com/adafruit/Adafruit_BMP085_Unified
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 
 AfroESC user manual:
 https://arduino.ua/docs/AfroESC30A.pdf
 
-Servo, ESC control:
-https://www.arduino.cc/en/Reference/Servo
+Servo w/ adafruit:
+https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
