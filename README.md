@@ -47,11 +47,14 @@ https://github.com/adafruit/Adafruit_BMP085_Unified
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
+
 AfroESC user manual:
 https://arduino.ua/docs/AfroESC30A.pdf
 
-Servo, ESC control:
-https://www.arduino.cc/en/Reference/Servo
+Servo w/ adafruit:
+https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
