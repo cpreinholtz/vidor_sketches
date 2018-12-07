@@ -10,52 +10,49 @@
 /*
   Modified by cpreinholtz in accordance to control theory
 */
+#include "configs.h"
 
 
 
 
-
-bool ENABLE_WIFI = false;
-bool ENABLE_IMU = true;
-
-bool UPSIDEDOWN=false;
-
-float LOOP_PERIOD=0.02;
-
-
+int mode=test;
 int epoch=0;
+char command='n';
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void loop() {
   float ax, ay, gx, gy, gz, h;
   float cx=0.0, cy=0.0, cz=0.0, px=0.0, py=0.0, pz=0.0;
+  unsigned long start_loop ;
 
-  while(1){
-  unsigned long start_loop = millis();
+  while(1){start_loop = millis();
+    
+    if (mode==test){
+      
+    }
+    else{     
+    
   
-
-  poll_sensor(ax, ay, gx, gy, gz, h);
-  //px=get_gyro_pos(px,gx);//gyro only
-  px=get_gyro_pos(cx,gx);//according to contols theory, feedback the filtered measurment
-  py=get_gyro_pos(cy,gy);
-  pz=get_gyro_pos(cz,gz);
-  
-  
-  cf(cx, ax, px);
-  cf(cy, ay, py);
-  cf(cz, h,  pz);
-
-
-  print_conditional(ax,ay,gx,gy,gz,h, cx, cy, px, py, pz);
-  send_telem(start_loop);
-  regulate_time(start_loop);
-
-
-
+      poll_sensor(ax, ay, gx, gy, gz, h);
+      //px=get_gyro_pos(px,gx);//gyro only
+      px=get_gyro_pos(cx,gx);//according to contols theory, feedback the filtered measurment
+      py=get_gyro_pos(cy,gy);
+      pz=get_gyro_pos(cz,gz);
+      
+      
+      cf(cx, ax, px);
+      cf(cy, ay, py);
+      cf(cz, h,  pz);
+    
+    
+      print_conditional(ax,ay,gx,gy,gz,h, cx, cy, px, py, pz);
+      //send_telem(start_loop);
+      
+    }//mode
+    get_command();
+    regulate_time(start_loop);
   }//while (1)
- 
-
 }
 
 
@@ -75,6 +72,9 @@ void setup() {
  
   
 }
+
+
+
 
 
 

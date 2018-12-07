@@ -13,10 +13,10 @@ void regulate_time(unsigned long startTime){
 
   
   epoch = epoch +1;
-  //Each loop should be  20ms.
+  //Each loop should be  20ms. (ideally)
   if(millis() - startTime > (LOOP_PERIOD*1000) ){
     Serial.print("TOO SLOW!!!!: loop time (ms)= ");
-    Serial.print(millis() - startTime);
+    Serial.println(millis() - startTime);
   }
   
   while(millis() - startTime < (LOOP_PERIOD*1000))
