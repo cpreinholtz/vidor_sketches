@@ -40,8 +40,7 @@ struct attitude  //type
    float roll;
    float pitch;
    float yaw;
-   //...
-   //float height??
+   float height;
 };
 typedef struct attitude Attitude;    
 #endif

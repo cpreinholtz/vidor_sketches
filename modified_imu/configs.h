@@ -1,49 +1,41 @@
 #include "types.h"
 
+
+
+
+
+//control mode constants
+#define idle 1
+#define orientation_mode 2
+#define sensor_test 4
+#define flight 8
+#define esc_calibration 16
+#define throttle_test 32
+#define sensor_test 64
+#define error_test 128
+#define desired_test 256
+
+
+#define hover 0 //unsupported right now
+
+
+//flight mode setting (disables motor writes)
+#define FLIGHT_MODE true
+
+
 //enablers
 #define ENABLE_WIFI false
 #define ENABLE_IMU true
+#define ENABLE_PWM false
 #define UPSIDEDOWN false
-
-
-//motors
-#define pwm_frequency 60  //16mS total, 4.06uS per step (4096 max)
-#define motor_min 900
-#define motor_start 1000 //~4ms?
-#define motor_max 2000  //~8ms?
-
-#define SERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
-#define SERVOMAX  600 // this is the 'maximum' pulse length count (out of 4096)
-
-
-#define FL  1
-#define FR  2
-#define BL  3
-#define BR  4
-
-
-//PID
-//const float i_error_max=100* LOOP_PERIOD;   //100 degrees of integrated error maximun (factoring in that int error is not scaled by dt)
-#define i_error_max (100* LOOP_PERIOD)
-
-
-//mode constants
-#define idle 1
-#define orientation 2
-#define takeoff 4
-#define flight 8
-
-#define calibration 128
-#define test 256
+#define ENABLE_BMP true
 
 
 
-//global variables
-extern float G;//definition located at the top of "sensors"
-extern float A;
 
 
-extern Attitude desired, measured;
+
+extern Attitude desired, measured, desired_raw, offset;
 extern Throttle throttle;
 extern PidError eroll, epitch, eyaw, eheight;
 extern PidConstants kroll,kpitch,kyaw, kheight;
@@ -55,6 +47,9 @@ extern PidConstants kroll,kpitch,kyaw, kheight;
 
 
 
+//global variables
+extern float G;//definition located at the top of "sensors"
+extern float A;
 
 //Dont Touch
 #define LOOP_PERIOD 0.02

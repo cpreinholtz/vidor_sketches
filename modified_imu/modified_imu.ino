@@ -15,59 +15,119 @@
 
 
 
-int mode=test;
+
+//pre flight checklist
+bool oriented=false;
+bool liftoff=false;
+int flight_mode=idle;
+
+
+//int command_mode=idle;
 int epoch=0;
-char command='n';
+char command='k';
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void loop() {
-  float ax, ay, gx, gy, gz, h;
-  float cx=0.0, cy=0.0, cz=0.0, px=0.0, py=0.0, pz=0.0;
+
   unsigned long start_loop ;
 
-  while(1){start_loop = millis();
+  while(1){
+    start_loop = millis(); 
+          
+    dostuff();
+    get_command();//this covers desired
     
-    if (mode==test){
-      
-    }
-    else{     
+
+    regulate_time(start_loop);  
+
     
-  
-      poll_sensor(ax, ay, gx, gy, gz, h);
-      //px=get_gyro_pos(px,gx);//gyro only
-      px=get_gyro_pos(cx,gx);//according to contols theory, feedback the filtered measurment
-      py=get_gyro_pos(cy,gy);
-      pz=get_gyro_pos(cz,gz);
-      
-      
-      cf(cx, ax, px);
-      cf(cy, ay, py);
-      cf(cz, h,  pz);
-    
-    
-      print_conditional(ax,ay,gx,gy,gz,h, cx, cy, px, py, pz);
-      //send_telem(start_loop);
-      
-    }//mode
-    get_command();
-    regulate_time(start_loop);
   }//while (1)
 }
 
 
 
 
+void dostuff(void){
+  switch(flight_mode){
+    
+//Deliverable modes    
+    case idle:
+      //no measured      
+      idle_control();      
+    break;
+        
+    case esc_calibration:
+      calibrate_esc();
+      flight_mode=idle;  
+    break;
+        
+    case orientation_mode:  
+      calc_offsets(); 
+      print_offset(); 
+    break;
+
+    case flight:
+      flight_control();
+      print_measured();
+    break;
+
+
+//////////////////////////////
+//tests
+    case sensor_test:
+      get_measured();
+      print_measured();
+    break;
+    
+    case error_test:
+      flight_control();
+      print_eroll();
+    break;
+
+    case desired_test:
+      flight_control();
+      print_desired();
+      //print_desired_raw();
+    break;
+    
+    case throttle_test:
+      flight_control();
+      print_x();
+      //print_throttle();
+    break;
+
+//////////////////////////////
+
+ 
+    default:
+      Serial.println("unsuporrted FLIGHT_MODE");
+      flight_mode=idle;
+    break;
+  }
+
+
+  
+}
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void setup() {
-         // join i2c bus (address optional for master)
-  pinMode(LED_BUILTIN, OUTPUT);
+         // join i2c bus (address optional for master) 
+  flight_mode=idle; 
   Serial.begin(115200);  // start serial for output  
+  delay(1000);
+  pinMode(LED_BUILTIN, OUTPUT);
   
   setup_wifi();
   setup_imu();
+  setup_bmp();
+  setup_pid();
+  setup_motors();
+
+  
 
  
   

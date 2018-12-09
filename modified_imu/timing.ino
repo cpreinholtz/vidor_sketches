@@ -1,4 +1,4 @@
-
+#include "configs.h"
 
 
 void regulate_time(unsigned long startTime){  

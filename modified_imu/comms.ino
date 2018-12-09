@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include "secrets.h"
-
+#include "configs.h"
 
 
 WiFiClient client;
@@ -11,6 +11,8 @@ char ssid[]=SECRET_SSID;
 char pass[]=SECRET_PASS;
 unsigned int localPort = SECRET_PORT;      // local port to listen on
 char servername[]=SECRET_SERVER_IP;  // remote server we will connect to
+
+
 
 char start='{';
 char last='}';
@@ -31,7 +33,7 @@ char* id[]={
 
 ///////////////////////////////////////////////////////
 //WIFI
-void get_command(){
+void get_command(void){
 
   if(ENABLE_WIFI==true){
     if (client.available()) {
@@ -43,6 +45,9 @@ void get_command(){
       Serial.print(epoch);
       Serial.println("");
       client.flush();
+      
+      switch_flight_mode();
+      //get_numeric_command();
     }
   }
   else{
@@ -53,10 +58,177 @@ void get_command(){
       Serial.print(" at Epoch: ");
       Serial.print(epoch);
       Serial.println("");
+
+      switch_flight_mode();
+      //get_numeric_command();
     }
   }  
 
+
+}
+
+
+
+
+
+void switch_flight_mode(void){
+
+  if (command>='0'&& command <='9'){
+    get_desired();
+  }
+
+  //switches based on key pressed to get the command mode
+  switch(command){
+    case 'o'://orientation_mode
+      if (flight_mode==idle){
+        flight_mode=orientation_mode;     
+        Serial.println("Entering orientation_mode Mode");
+      }    
+    break;
+    
+    case 'k'://kill / idle
+      flight_mode=idle;
+      Serial.println("Entering IDLE Mode");
+    break;
+    
+    case 'c'://calibration
+      if (flight_mode==idle){
+        flight_mode=esc_calibration;  
+        Serial.println("Entering Calibration Mode");      
+      }   
+    break;
+
+    case 't'://throttle (no PID corrections)
+      if (flight_mode==idle){
+        flight_mode=throttle_test;  
+        Serial.println("Entering throttle test Mode");      
+      }    
+    break;
+    
+    case 's'://throttle (no PID corrections)
+      if (flight_mode==idle){
+        flight_mode=sensor_test;  
+        Serial.println("Entering sensor test Mode");      
+      }    
+    break;
+
+    case 'e'://throttle (no PID corrections)
+      if (flight_mode==idle){
+        flight_mode=error_test;  
+        Serial.println("Entering error test Mode");      
+      }    
+    break;
+
+    case 'd'://throttle (no PID corrections)
+      if (flight_mode==idle){
+        flight_mode=desired_test;  
+        Serial.println("Entering desired test Mode");      
+      }    
+    break;
+
+    case 'f'://fly
+      if (flight_mode==orientation_mode||flight_mode==hover){
+        flight_mode=flight;   
+        Serial.println("Entering flight Mode");     
+      }    
+    break;
+
+
+    case 'h'://hover
+      if (flight_mode==hover){
+        flight_mode=hover;   
+        Serial.println("Entering hover Mode");     
+      }    
+    break;
+
+
+    
+
+    default:
+    break;
+    
+  }  
+}
+
+
+void get_desired(void){
+  get_desired_raw();
+  get_flight_desired();
+  //if (flight_mode==flight)get_flight_desired();
+  //else if (flight_mode!=flight)get_idle_desired();
+   
   
+  
+}
+
+
+void get_desired_raw(void){
+  desired_raw.roll=0.0;
+  desired_raw.pitch=0.0;
+  desired_raw.yaw=0.0;
+  float diff=5.0;
+    switch(command){
+      case '8'://pitch forward
+        desired_raw.pitch=-diff; 
+        break;
+       case '2'://pitch back
+        desired_raw.pitch=diff; 
+        break;
+       case '4'://roll left
+        desired_raw.roll=-diff; 
+        break;
+       case '6'://roll right
+        desired_raw.roll=+diff; 
+        break;
+       case '7'://yaw ccw
+        desired_raw.yaw=-diff;        
+        break;
+       case '9'://yaw cw
+        desired_raw.yaw=diff;        
+        break;
+      case '5':default:
+        //get_idle_desired();
+      break;
+      
+
+    }
+}
+
+/*
+void get_idle_desired(void){
+  //desired.roll=0.0;
+  //desired.pitch=0.0;
+  //desired.yaw=0.0;
+  desired.roll=0.0+offset.roll;
+  desired.pitch=0.0+offset.pitch;
+  desired.yaw=desired_raw.yaw;
+}*/
+
+void get_flight_desired(void){
+
+  desired.roll=desired_raw.roll+offset.roll;
+  desired.pitch=desired_raw.pitch+offset.roll;
+  desired.yaw=desired.yaw+desired_raw.yaw;//offset already applied in yaw
+  if (desired.yaw>360.0)desired.yaw-=360;
+  else if(desired.yaw<0.0)desired.yaw+=360;
+}
+
+
+
+
+
+void print_desired(void){
+  Serial.print("droll: ");Serial.print(desired.roll);Serial.print("\t");
+  Serial.print("dpitch: ");Serial.print(desired.pitch);Serial.print("\t");
+  Serial.print("dyaw: ");Serial.print(desired.yaw);Serial.print("\t");
+  Serial.println("");
+}
+
+void print_desired_raw(void){
+  Serial.print("droll_raw: ");Serial.print(desired_raw.roll);Serial.print("\t");
+  Serial.print("dpitch_raw: ");Serial.print(desired_raw.pitch);Serial.print("\t");
+  Serial.print("dyaw_raw: ");Serial.print(desired_raw.yaw);Serial.print("\t");
+  Serial.println("");
 }
 
 
@@ -291,6 +463,10 @@ void say_hello(void) {
     Serial.println("");
   }
 
+  else{
+    Serial.println("No WIFI in setup");
+  }
+
 
 
 }
@@ -298,6 +474,10 @@ void say_hello(void) {
 
 
 void setup_wifi(void) {
+  desired_raw.roll=0.0;
+  desired_raw.pitch=0.0;
+  desired_raw.yaw=0.0;
+  
   if(ENABLE_WIFI){
     // check for the WiFi module:
     if (WiFi.status() == WL_NO_MODULE) {

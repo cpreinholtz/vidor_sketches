@@ -4,29 +4,77 @@
 //globals
 //global variables, objects and structs    
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
-Attitude desired, measured;
+Attitude desired_raw, desired, measured;
 Throttle throttle;
 PidError eroll, epitch, eyaw, eheight;
 PidConstants kroll,kpitch,kyaw, kheight;
 
+//PID
+//const float i_error_max=100* LOOP_PERIOD;   //100 degrees of integrated error maximun (factoring in that int error is not scaled by dt)
+#define i_error_max (100* LOOP_PERIOD)
+
+
+#define FL  1
+#define FR  2
+#define BL  3
+#define BR  4
+
+
+//motors
+#define pwm_frequency 60  //16mS total, 4.06uS per step (4096 max)
+#define motor_min 900
+#define motor_start 1000 //~4ms?
+#define motor_max 2000  //~8ms?
 
 
 /////////////////////////////////////////////////
 //ALL (THE BIG HITTERS)
 
+void idle_control(void){
+    set_all_motors(motor_min);   
+}
 
-void flight_control(void){
-    get_all_errors();
-    apply_all_errors();
-    send_all_to_motors();    
+void throttle_control(void){
+    set_all_motors(motor_min);  //TODO 
 }
 
 
+void flight_control(void){
+  get_measured();
+  get_all_errors();
+  apply_all_errors();
+  send_all_to_motors();    
+}
+
+
+void print_measured(void){
+  Serial.print("mroll: ");Serial.print(measured.roll);Serial.print("\t");
+  Serial.print("mpitch: ");Serial.print(measured.pitch);Serial.print("\t");
+  Serial.print("myaw: ");Serial.print(measured.yaw);Serial.print("\t");
+  Serial.println("");
+}
+
+void print_eroll(void){
+  Serial.print("eroll_p: ");Serial.print(eroll.p);Serial.print("\t");
+  Serial.print("eroll_i: ");Serial.print(eroll.i);Serial.print("\t");
+  Serial.print("eroll_d: ");Serial.print(eroll.d);Serial.print("\t");
+  Serial.println("");
+}
+
+void print_throttle(void){
+  Serial.print("t_fl: ");Serial.print(throttle.fl);Serial.print("\t");  
+  Serial.print("t_fr: ");Serial.print(throttle.fr);Serial.print("\t");  
+  Serial.print("t_bl: ");Serial.print(throttle.bl);Serial.print("\t");  
+  Serial.print("t_br: ");Serial.print(throttle.br);Serial.print("\t");
+  Serial.println("");
+}
+
 //gets errors for Attitudes
 void get_all_errors(void){
-    get_single_error(eroll,desired.roll,measured.roll);
-    get_single_error(epitch,desired.pitch,measured.pitch);
-    get_yaw_error(eyaw,desired.yaw,measured.yaw);
+  get_single_error(eroll,desired.roll,measured.roll);
+  get_single_error(epitch,desired.pitch,measured.pitch);
+  get_yaw_error(eyaw,desired.yaw,measured.yaw);
+  //get_height_error();
 }
 
 //gets (kp*p+ki*i+kd*d) and applies corrections to all throttle values
@@ -34,18 +82,19 @@ void apply_all_errors(){
     apply_roll( throttle, get_pid_result(eroll,kroll) );
     apply_pitch( throttle, get_pid_result(epitch,kpitch) );
     apply_yaw( throttle, get_pid_result(eyaw,kyaw) );
-    apply_height( throttle, get_pid_result(eheight,kheight) );
+   //apply_height( throttle, get_pid_result(eheight,kheight) );
     limit_throttle();
 }
 
 
 void send_all_to_motors(void){
-    if(mode==flight||mode==takeoff){
-      pwm.setPWM(FL, 0, (int)throttle.fl);   
-      pwm.setPWM(FR, 0, (int)throttle.fr);   
-      pwm.setPWM(BL, 0, (int)throttle.bl);   
-      pwm.setPWM(BR, 0, (int)throttle.br);  
-      
+    if(flight_mode==flight){
+      if (ENABLE_PWM){
+        pwm.setPWM(FL, 0, (int)throttle.fl);   
+        pwm.setPWM(FR, 0, (int)throttle.fr);   
+        pwm.setPWM(BL, 0, (int)throttle.bl);   
+        pwm.setPWM(BR, 0, (int)throttle.br);  
+      }     
 
     }  
 
@@ -68,7 +117,7 @@ void get_single_error(PidError & err, float desire, float measure){
   err.d=temp-err.d;
   
   err.p=temp;
-  if(mode!=flight){
+  if(!liftoff){
     err.i=0.0;
   }else{
     err.i+=temp;
@@ -87,7 +136,7 @@ void get_yaw_error(PidError & err, float desire, float measure){
   err.d=temp-err.d;
   err.i+=temp;
   err.p=temp;
-  if(mode!=flight){
+  if(!liftoff){
     err.i=0.0;
   }
 }
@@ -188,10 +237,9 @@ void limit_throttle(void){
 /////////////////////////////////////////////////
 //CALIBRATION    
 void calibrate_esc(void){
-  Serial.flush();
-  if (mode==calibration){      
-    set_all_motors(motor_max);
-  }
+  Serial.flush();    
+  set_all_motors(motor_max);
+
   Serial.println("plug in ESCs, beeps will increase in pitch, followed by a beep matching the pitch, press any key to continue...");
   while(!Serial.available());
   Serial.flush();
@@ -273,39 +321,43 @@ void setup_pid(void){
 
 
 void setup_motors(void){
-  if(mode!=test){
+  if(ENABLE_PWM){//probably want to just send to low signal to disable esc!!
     pwm.begin();
     pwm.setPWMFreq(pwm_frequency);  // This is the maximum PWM frequency
-
+    set_all_motors(motor_min);
     
-    if (mode!=calibration){  
-      set_all_motors(motor_min);
-    }
   }
+  else{
+    Serial.println("No PWM in setup");
+  }
+
+  
   delay(10);
   
 }
 
 void set_all_motors(int value){
+  if (ENABLE_PWM){
+    if (value<=motor_min){
+      pwm.setPWM(FL, 0, motor_min);   
+      pwm.setPWM(FR, 0, motor_min);   
+      pwm.setPWM(BR, 0, motor_min);   
+      pwm.setPWM(BL, 0, motor_min);       
+    }
+    else if( value>=motor_max){
+      pwm.setPWM(FL, 0, motor_max);   
+      pwm.setPWM(FR, 0, motor_max);   
+      pwm.setPWM(BL, 0, motor_max);   
+      pwm.setPWM(BR, 0, motor_max);    
+    }
+    else{
+      pwm.setPWM(FL, 0, value);   
+      pwm.setPWM(FR, 0, value);   
+      pwm.setPWM(BL, 0, value);   
+      pwm.setPWM(BR, 0, value);  
+    }
+  }
 
-  if (value<=motor_min){
-    pwm.setPWM(FL, 0, motor_min);   
-    pwm.setPWM(FR, 0, motor_min);   
-    pwm.setPWM(BR, 0, motor_min);   
-    pwm.setPWM(BL, 0, motor_min);       
-  }
-  else if( value>=motor_max){
-    pwm.setPWM(FL, 0, motor_max);   
-    pwm.setPWM(FR, 0, motor_max);   
-    pwm.setPWM(BL, 0, motor_max);   
-    pwm.setPWM(BR, 0, motor_max);    
-  }
-  else{
-    pwm.setPWM(FL, 0, value);   
-    pwm.setPWM(FR, 0, value);   
-    pwm.setPWM(BL, 0, value);   
-    pwm.setPWM(BR, 0, value);  
-  }
   
 }
 
