@@ -54,36 +54,9 @@ void get_comp_filter(void){
 
 }
 
-void print_x(void){
-  Serial.print("gx: ");Serial.print(gx);Serial.print("\t");
-  Serial.print("ax: ");Serial.print(ax);Serial.print("\t");
-  Serial.print("px: ");Serial.print(px);Serial.print("\t");
-  Serial.print("cx: ");Serial.print(cx);Serial.print("\t");
-  Serial.println("");
-}
 
-void print_y(void){
-  Serial.print("gy: ");Serial.print(gy);Serial.print("\t");
-  Serial.print("ay: ");Serial.print(ay);Serial.print("\t");
-  Serial.print("py: ");Serial.print(py);Serial.print("\t");
-  Serial.print("cy: ");Serial.print(cy);Serial.print("\t");
-  Serial.println("");
-}
 
-void print_z(void){
-  Serial.print("gz: ");Serial.print(gz);Serial.print("\t");
-  Serial.print("mh: ");Serial.print(h);Serial.print("\t");
-  Serial.print("pz: ");Serial.print(pz);Serial.print("\t");
-  Serial.print("cz: ");Serial.print(cz);Serial.print("\t");
-  Serial.println("");
-}
 
-void print_offset(void){
-  Serial.print("oroll: ");Serial.print(offset.roll);Serial.print("\t");
-  Serial.print("opitch: ");Serial.print(offset.pitch);Serial.print("\t");
-  Serial.print("oyaw: ");Serial.print(offset.yaw);Serial.print("\t");
-  Serial.println("");
-}
 
 
 void poll_sensors(){  //(float &ax, float &ay, float &gx, float &gy, float &gz, float &h){

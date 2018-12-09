@@ -166,7 +166,11 @@ void get_desired_raw(void){
   desired_raw.roll=0.0;
   desired_raw.pitch=0.0;
   desired_raw.yaw=0.0;
+  desired_raw.yaw=0.0;
+  desired_raw.throttle=0.0;
+  
   float diff=5.0;
+//  flaot tdiff=
     switch(command){
       case '8'://pitch forward
         desired_raw.pitch=-diff; 
@@ -186,6 +190,13 @@ void get_desired_raw(void){
        case '9'://yaw cw
         desired_raw.yaw=diff;        
         break;
+      case '-'://throttle down
+        desired_raw.throttle=-diff;        
+        break;
+
+      case '+'://throttle up
+        desired_raw.throttle=diff;        
+        break;
       case '5':default:
         //get_idle_desired();
       break;
@@ -194,42 +205,25 @@ void get_desired_raw(void){
     }
 }
 
-/*
-void get_idle_desired(void){
-  //desired.roll=0.0;
-  //desired.pitch=0.0;
-  //desired.yaw=0.0;
-  desired.roll=0.0+offset.roll;
-  desired.pitch=0.0+offset.pitch;
-  desired.yaw=desired_raw.yaw;
-}*/
+
 
 void get_flight_desired(void){
 
-  desired.roll=desired_raw.roll+offset.roll;
+  desired.roll=desired_raw.roll+offset.roll;  
   desired.pitch=desired_raw.pitch+offset.roll;
+  
   desired.yaw=desired.yaw+desired_raw.yaw;//offset already applied in yaw
   if (desired.yaw>360.0)desired.yaw-=360;
-  else if(desired.yaw<0.0)desired.yaw+=360;
+  else if(desired.yaw<0.0)desired.yaw+=360;    
+
+  
+  desired.throttle=desired.throttle+desired_raw.throttle;//capped later, leave raw for now
+  
+  
 }
 
 
 
-
-
-void print_desired(void){
-  Serial.print("droll: ");Serial.print(desired.roll);Serial.print("\t");
-  Serial.print("dpitch: ");Serial.print(desired.pitch);Serial.print("\t");
-  Serial.print("dyaw: ");Serial.print(desired.yaw);Serial.print("\t");
-  Serial.println("");
-}
-
-void print_desired_raw(void){
-  Serial.print("droll_raw: ");Serial.print(desired_raw.roll);Serial.print("\t");
-  Serial.print("dpitch_raw: ");Serial.print(desired_raw.pitch);Serial.print("\t");
-  Serial.print("dyaw_raw: ");Serial.print(desired_raw.yaw);Serial.print("\t");
-  Serial.println("");
-}
 
 
 void send_telem(float ms){
@@ -263,118 +257,6 @@ void kill_client(void){
 ////////////////////////////////////////////
 //SERIAL
 
-void print_conditional(float ax,float ay,float gx,float gy,float gz,float h,float cx,float cy, float px, float py, float pz){
-
-  //float frequency =1/LOOPPERIOD;
-
-  if (epoch%2==0){
-
-
-    
-    //if (Serial.available() > 0) {
-      //incomingByte = Serial.read();
-    //}
-    switch (command){
-    case 'x'://print x gyro and acc unfiltered
-      Serial.print(" ax ");Serial.print(ax);
-      Serial.print("\t\t");
-      Serial.print(" gx ");Serial.print(gx);    
-      Serial.println();
-      break;
-     
-    case 'y':
-      Serial.print(" ay ");Serial.print(ay);
-      Serial.print("\t\t");
-      Serial.print(" gy ");Serial.print(gy);    
-      Serial.println();
-  
-      break;
-  
-     case 'h':
-      Serial.print(" heading ");Serial.print(h); 
-      Serial.print("\t\t");
-      Serial.print(" gz ");Serial.print(gz);  
-      Serial.println();
-  
-      break;
-  
-      case 'c':
-      Serial.print(" cx ");Serial.print(cx); 
-      Serial.print("\t\t");
-      Serial.print(" ax ");Serial.print(ax);
-      Serial.print("\t\t");
-      Serial.print(" gx ");Serial.print(gx); 
-      Serial.println();
-      break;
-      
-      case 'C':
-      Serial.print(" cy ");Serial.print(cy); 
-      Serial.print("\t\t");
-      Serial.print(" ay ");Serial.print(ay);
-      Serial.print("\t\t");
-      Serial.print(" gy ");Serial.print(gy); 
-      Serial.println();
-      break;
-  
-      case '-':
-        if(G>0.02)G=G-0.01;
-        else G = 0.01;
-        command ='g';
-      break;
-      
-      case '+':
-        if(G<0.98)G=G+0.01;
-        else G=0.99;
-        command ='g';
-      break;
-      
-      case 'g':
-      Serial.print(" cx ");Serial.print(cx); 
-      Serial.print("\t\t");
-      Serial.print(" ax ");Serial.print(ax);
-      Serial.print("\t\t");
-      Serial.print(" gx ");Serial.print(gx);
-      Serial.print("\t\t");
-      Serial.print(" px ");Serial.print(px);
-      Serial.print("\t\t");  
-      Serial.print(" G_GAIN ");Serial.print(G);
-      Serial.println();
-      break;
-
-      case 'G':
-      Serial.print(" cy ");Serial.print(cy); 
-      Serial.print("\t\t");
-      Serial.print(" ay ");Serial.print(ay);
-      Serial.print("\t\t");
-      Serial.print(" gy ");Serial.print(gy);
-      Serial.print("\t\t");
-      Serial.print(" py ");Serial.print(py);
-      Serial.print("\t\t");  
-      Serial.print(" G_GAIN ");Serial.print(G);
-      Serial.println();
-      break;
-      
-      case 'p':
-      Serial.print(" gx ");Serial.print(gx);
-      Serial.print("\t\t");
-      Serial.print(" px ");Serial.print(px);
-      Serial.println();
-      break;
-      
-    default:
-  
-      break;
-     
-    }
-  
-  }
-  
-}
-
-
-
-
-
 
 
 
@@ -389,50 +271,6 @@ void print_conditional(float ax,float ay,float gx,float gy,float gz,float h,floa
 /////////////////////////////////////////////////////////////////////////////
 
 
-
-/*
-int create_json(void){
-      String str ="";
-      str.concat(start);
-      
-      str.concat(id[0]);
-      str.concat(data.time);
-      str.concat(comma);
-      
-      str.concat(id[1]);
-      str.concat(data.x);
-      str.concat(comma);
-      //...
-      str.concat(end);
-}*/
-
-
-/*
-void test_wifi(void) {
-  if(ENABLE_WIFI){
-    
-      Serial.println("Assessing connection");
-    
-      if (client.connected()){
-        Serial.println("attempting to send message");
-        client.println("hello, server");
-      }
-      else{
-        Serial.println("No Connection");
-      }
-    
-    Serial.println("Reading connection");
-    while (client.available()) {
-      char c = client.read();
-      Serial.print(c);
-    }
-    Serial.println("");
-  }
-
-
-
-}
-*/
 
 
 
@@ -477,6 +315,12 @@ void setup_wifi(void) {
   desired_raw.roll=0.0;
   desired_raw.pitch=0.0;
   desired_raw.yaw=0.0;
+  desired_raw.throttle=0.0;
+
+  desired.roll=0.0;
+  desired.pitch=0.0;
+  desired.yaw=0.0;  
+  desired.throttle=motor_min;
   
   if(ENABLE_WIFI){
     // check for the WiFi module:
@@ -532,94 +376,4 @@ void setup_wifi(void) {
 
 
 
-///////////////////////////////////////////////////////
-//OLD
-
-
-/*
-  Serial.print(" g ");Serial.print(g);
-  Serial.print("\t\t");
-  Serial.print(" G ");Serial.print(G);
-  Serial.print("\t\t");
-  Serial.print(" a ");Serial.print(a);
-  Serial.print("\t\t");
-  Serial.print(" A ");Serial.print(A);
-  Serial.print("\t\t");
-  Serial.print(" val ");Serial.print(val);
-  Serial.println();
-  */
-  
-
-
-/*
-
-void print_acc(void){
-    if (PRINT_ENABLE & VERBOSE){
-
-    Serial.print(" buff0: ");Serial.print(buff[0]);
-    Serial.print(" buff1: ");Serial.print(buff[1]);
-    Serial.print(" buff2: ");Serial.print(buff[2]);
-    Serial.print(" buff3: ");Serial.print(buff[3]);
-    Serial.print(" buff4: ");Serial.print(buff[4]);
-    Serial.print(" buff5: ");Serial.print(buff[5]);
-
-    
-    Serial.print(" accraw0: ");Serial.print(accRaw[0]);
-    Serial.print(" accraw1: ");Serial.print(accRaw[1]);
-    Serial.print(" accraw2: ");Serial.print(accRaw[2]);
-
-    
-    Serial.print(" #AccX:  ");
-    Serial.print(AccXangle);
-    Serial.print(" #AccY:  ");
-    Serial.print(AccYangle);
-    
-    Serial.println();
-  }
-}
-
-
-
-
-
-void print_all(void){
-    if(PRINT_ENABLE){
-      Serial.print("#AccX  ");
-      Serial.print(AccXangle);
-      Serial.print("  ###AccY  ");
-      Serial.print(AccYangle);
-  
-  
-      Serial.print("  ###GyrX");
-      Serial.print( gyroXangle);
-      Serial.print("  ###GyrY  ");
-      Serial.print(gyroYangle);
-      Serial.print("   ###GyrZ");
-      Serial.print(gyroZangle);
-  
-      Serial.print("  ######CFangleX  ");
-      Serial.print( CFangleX);
-      Serial.print("  ######CFangleY  ");
-      Serial.print(CFangleY);
-  
-      Serial.print("  ######  HEADING ");
-      Serial.print( heading);
-  }
-}
-
-*/
-/*
-  if (ax != accRaw[0] ){
-    Serial.print(" ax:  ");Serial.print(ax,HEX);
-    Serial.print(" accX:  ");Serial.print(accRaw[0],HEX);
-    Serial.print("   <--- mismatch!!!!!!");
-    Serial.println();
-
-    Serial.print(" ax:  ");Serial.print(ax);
-    Serial.print(" accX:  ");Serial.print(accRaw[0]);
-    Serial.print("   <--- mismatch!!!!!!");
-    Serial.println();
-    delay(500);
-  }
-*/
 

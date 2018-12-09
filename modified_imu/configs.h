@@ -14,13 +14,15 @@
 #define sensor_test 64
 #define error_test 128
 #define desired_test 256
-
-
 #define hover 0 //unsupported right now
 
 
-//flight mode setting (disables motor writes)
-#define FLIGHT_MODE true
+//motors
+#define pwm_frequency 60  //16mS total, 4.06uS per step (4096 max)
+#define motor_min 900
+#define motor_start 1000 //~4ms?
+#define motor_max 2000  //~8ms?
+
 
 
 //enablers
@@ -29,16 +31,12 @@
 #define ENABLE_PWM false
 #define UPSIDEDOWN false
 #define ENABLE_BMP true
+#define FLIGHT_MODE true// (disables motor writes)
 
 
 
 
 
-
-extern Attitude desired, measured, desired_raw, offset;
-extern Throttle throttle;
-extern PidError eroll, epitch, eyaw, eheight;
-extern PidConstants kroll,kpitch,kyaw, kheight;
 
 
 
@@ -50,6 +48,11 @@ extern PidConstants kroll,kpitch,kyaw, kheight;
 //global variables
 extern float G;//definition located at the top of "sensors"
 extern float A;
+extern Attitude desired, measured, desired_raw, offset;
+extern Throttle throttle;
+extern PidError eroll, epitch, eyaw, eheight;
+extern PidConstants kroll,kpitch,kyaw, kheight;
+
 
 //Dont Touch
 #define LOOP_PERIOD 0.02

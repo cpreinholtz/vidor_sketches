@@ -62,22 +62,29 @@ void dostuff(void){
       flight_mode=idle;  
     break;
         
-    case orientation_mode:  
+    case orientation_mode: 
+      idle_control();  
       calc_offsets(); 
       print_offset(); 
     break;
 
     case flight:
       flight_control();
-      print_measured();
+      print_x();
     break;
 
 
 //////////////////////////////
 //tests
     case sensor_test:
-      get_measured();
+      flight_control();
       print_measured();
+    break;
+    
+    case desired_test:
+      flight_control();
+      print_desired();
+      //print_desired_raw();
     break;
     
     case error_test:
@@ -85,16 +92,10 @@ void dostuff(void){
       print_eroll();
     break;
 
-    case desired_test:
-      flight_control();
-      print_desired();
-      //print_desired_raw();
-    break;
     
     case throttle_test:
       flight_control();
-      print_x();
-      //print_throttle();
+      print_throttle();
     break;
 
 //////////////////////////////

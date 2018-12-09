@@ -4,7 +4,7 @@
 //globals
 //global variables, objects and structs    
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
-Attitude desired_raw, desired, measured;
+Attitude desired_raw, desired, measured, pid_result;
 Throttle throttle;
 PidError eroll, epitch, eyaw, eheight;
 PidConstants kroll,kpitch,kyaw, kheight;
@@ -20,11 +20,7 @@ PidConstants kroll,kpitch,kyaw, kheight;
 #define BR  4
 
 
-//motors
-#define pwm_frequency 60  //16mS total, 4.06uS per step (4096 max)
-#define motor_min 900
-#define motor_start 1000 //~4ms?
-#define motor_max 2000  //~8ms?
+
 
 
 /////////////////////////////////////////////////
@@ -42,48 +38,53 @@ void throttle_control(void){
 void flight_control(void){
   get_measured();
   get_all_errors();
+  get_all_pid();
   apply_all_errors();
   send_all_to_motors();    
 }
 
-
-void print_measured(void){
-  Serial.print("mroll: ");Serial.print(measured.roll);Serial.print("\t");
-  Serial.print("mpitch: ");Serial.print(measured.pitch);Serial.print("\t");
-  Serial.print("myaw: ");Serial.print(measured.yaw);Serial.print("\t");
-  Serial.println("");
-}
-
-void print_eroll(void){
-  Serial.print("eroll_p: ");Serial.print(eroll.p);Serial.print("\t");
-  Serial.print("eroll_i: ");Serial.print(eroll.i);Serial.print("\t");
-  Serial.print("eroll_d: ");Serial.print(eroll.d);Serial.print("\t");
-  Serial.println("");
-}
-
-void print_throttle(void){
-  Serial.print("t_fl: ");Serial.print(throttle.fl);Serial.print("\t");  
-  Serial.print("t_fr: ");Serial.print(throttle.fr);Serial.print("\t");  
-  Serial.print("t_bl: ");Serial.print(throttle.bl);Serial.print("\t");  
-  Serial.print("t_br: ");Serial.print(throttle.br);Serial.print("\t");
-  Serial.println("");
+void get_all_pid(void){
+  pid_result.roll=get_pid_result(eroll,kroll);
+  pid_result.pitch=get_pid_result(epitch,kpitch);  
+  pid_result.yaw=get_pid_result(eyaw,kyaw);
+  
 }
 
 //gets errors for Attitudes
 void get_all_errors(void){
-  get_single_error(eroll,desired.roll,measured.roll);
-  get_single_error(epitch,desired.pitch,measured.pitch);
-  get_yaw_error(eyaw,desired.yaw,measured.yaw);
+  get_single_error(eroll, normalise(measured.roll - desired.roll);
+  get_single_error(epitch, normalise(measured.pitch - desired.pitch));  
+  get_single_error(eyaw, normalise(measured.yaw - desired.yaw));
+  
   //get_height_error();
 }
 
+
+void normalise(float e){//d, float m){
+
+  //float e=m-d;
+
+  if (e>180.0)e=e-360;
+  else if (e<-180.0)e=e+360;
+  return e;
+
+}
+
+
+
 //gets (kp*p+ki*i+kd*d) and applies corrections to all throttle values
 void apply_all_errors(){
-    apply_roll( throttle, get_pid_result(eroll,kroll) );
-    apply_pitch( throttle, get_pid_result(epitch,kpitch) );
-    apply_yaw( throttle, get_pid_result(eyaw,kyaw) );
-   //apply_height( throttle, get_pid_result(eheight,kheight) );
-    limit_throttle();
+    throttle.fl=desired.throttle;//base the throttle from desired
+    throttle.fr=desired.throttle;
+    throttle.bl=desired.throttle;
+    throttle.br=desired.throttle;
+    
+    apply_roll( );
+    //apply_pitch( );
+    //apply_yaw( );
+    //apply_height( );
+   
+    limit_throttle();//dont get out of hand now children...
 }
 
 
@@ -108,12 +109,12 @@ void send_all_to_motors(void){
 
 ///////////////////////////////////////////////////////
 //ERROR AND PID
-void get_single_error(PidError & err, float desire, float measure){
+void get_single_error(PidError & err, float temp ){
   
   //if(desired-measured>180.0)desied-=180.0;//normalise desired to get the closest path to stability
   //else if(measured-desired>180.0)desied+=180.0;
   
-  float temp=desire-measure;
+  //float temp=measure-desire;
   err.d=temp-err.d;
   
   err.p=temp;
@@ -126,20 +127,19 @@ void get_single_error(PidError & err, float desire, float measure){
   }
 }
 
-
+/*
 //accounts for the 0-360 range near north
 void get_yaw_error(PidError & err, float desire, float measure){
-  if(desire-measure>180.0)desire-=180.0;//normalise desired to get the closest path to stability
-  else if(measure-desire>180.0)desire+=180.0;
+
   
-  float temp=desire-measure;
+  float temp=measure-desire;
   err.d=temp-err.d;
   err.i+=temp;
   err.p=temp;
   if(!liftoff){
     err.i=0.0;
   }
-}
+}*/
 
 //calculates kp*p+ki*i+kd*d and returns result after max and min is applied
 float get_pid_result(PidError err, PidConstants constant){
@@ -149,14 +149,14 @@ float get_pid_result(PidError err, PidConstants constant){
   result+=constant.ki*err.i;//I
   result+=constant.kd*err.d; //D
   
-  if (result>=constant.max){
+  /*if (result>=constant.max){
     result=constant.max;
     Serial.println("PID MAX HIT!");
   }
   else if(result<=constant.min){
     result=constant.min;
     Serial.println("PID MIN HIT!");
-  }
+  }*/
   return result;   
 }
     
@@ -166,41 +166,70 @@ float get_pid_result(PidError err, PidConstants constant){
     
 /////////////////////////////////////////////////
 //sides
-void apply_roll(Throttle &throt, float res){
+void apply_roll(){
+
+  throttle.fl-=pid_result.roll;
+  throttle.bl-=pid_result.roll;
+  
+  throttle.fr+=pid_result.roll;
+  throttle.br+=pid_result.roll;
+
+/*
+  
   if (res>0.0){   //roll right for + desired roll
-    throt.fl+=res;
-    throt.bl+=res;
+    throttle.fl+=pid_result.roll;
+    throttle.bl+=res;
   }
   else{
-    throt.fr+=res;
-    throt.br+=res;
-  }            
+    throttle.fr+=res;
+    throttler.br+=res;
+  }     */       
 }
 
 //front/back 
-void apply_pitch(Throttle &throt, float res){
+void apply_pitch(){
+  throttle.fl-=pid_result.pitch;  
+  throttle.fr-=pid_result.pitch;  
+  
+  throttle.bl+=pid_result.pitch;
+  throttle.br+=pid_result.pitch;
+
+
+  /*
   if (res>0.0){   //pitch forward up for + desired pitch
-    throt.fl+=res;
-    throt.fr+=res;
+    throttle.fl+=res;
+    throttle.fr+=res;
   }
   else{
-    throt.bl+=res;
-    throt.br+=res;
-  }            
+    throttle.bl+=res;
+    throttle.br+=res;
+  }     */       
 }
 
 //opposites
-void apply_yaw(Throttle &throt, float res){
+void apply_yaw(){
+
+  
+  throttle.fl-=pid_result.yaw;  
+  throttle.br-=pid_result.yaw;
+
+  
+  throttle.fr+=pid_result.yaw;    
+  throttle.bl+=pid_result.yaw;
+  
+
+  
+  /*
   if (res>0.0){   // yaw cw for + desired heading
-    throt.fr+=res;//fr spins ccw,
-    throt.bl+=res;//bl spins ccw,
+    throttle.fr+=res;//fr spins ccw,
+    throttle.bl+=res;//bl spins ccw,
   }
   else{
-    throt.fl+=res; //fl spins cw, 
-    throt.br+=res; //br spins cw, 
-  }            
+    throttle.fl+=res; //fl spins cw, 
+    throttle.br+=res; //br spins cw, 
+  }   */         
 }
-
+/*
 //all4
 void apply_height(Throttle &throt, float res){
 
@@ -209,7 +238,7 @@ void apply_height(Throttle &throt, float res){
   throt.fl+=res; //fl spins cw, 
   throt.br+=res; //br spins cw,
         
-}
+}*/
 
 //cap at max and min
 void limit_throttle(void){
@@ -284,10 +313,7 @@ void setup_pid(void){
   epitch.d=0.0;        
   eyaw.p=0.0;
   eyaw.i=0.0;
-  eyaw.d=0.0;        
-  desired.roll=0.0;
-  desired.pitch=0.0;
-  desired.yaw=0.0;        
+  eyaw.d=0.0;             
   measured.roll=0.0;
   measured.pitch=0.0;
   measured.yaw=0.0;
@@ -296,26 +322,26 @@ void setup_pid(void){
   kroll.kp=1.0;
   kroll.ki=0.0 * LOOP_PERIOD;
   kroll.kd=0.0 / LOOP_PERIOD;    
-  kroll.min= motor_max-motor_start *  -0.1 ;
-  kroll.max= motor_max-motor_start *   0.1 ;
+  //kroll.min= motor_max-motor_start *  -0.1 ;
+  //kroll.max= motor_max-motor_start *   0.1 ;
 
   kpitch.kp=1.0;
   kpitch.ki=0.0 * LOOP_PERIOD;
   kpitch.kd=0.0 / LOOP_PERIOD;
-  kpitch.min= motor_max-motor_start * -0.1 ;
-  kpitch.max= motor_max-motor_start *  0.1 ;
+  //kpitch.min= motor_max-motor_start * -0.1 ;
+  //kpitch.max= motor_max-motor_start *  0.1 ;
 
   kyaw.kp=0.2;
   kyaw.ki=0.0 * LOOP_PERIOD;
   kyaw.kd=0.0 / LOOP_PERIOD;
-  kyaw.min= motor_max-motor_start  *  -0.1 ;
-  kyaw.max= motor_max-motor_start *  0.1 ;
+  //kyaw.min= motor_max-motor_start  *  -0.1 ;
+  //kyaw.max= motor_max-motor_start *  0.1 ;
 
   kheight.kp=1.0;
   kheight.ki=0.0 * LOOP_PERIOD;
   kheight.kd=0.0 / LOOP_PERIOD;    
-  kheight.min= motor_max-motor_start *  -0.1 ;
-  kheight.max= motor_max-motor_start *   0.1 ;
+  //kheight.min= motor_max-motor_start *  -0.1 ;
+  //kheight.max= motor_max-motor_start *   0.1 ;
 
 }
 
@@ -362,9 +388,3 @@ void set_all_motors(int value){
 }
 
 
-/*
-float normalise(float throt){//takes a throtle uS value and normalises from 0-99
-
-    if (throt<=motor_min) throt=0;
-    else if (throt>=motor_max) throt=0;
-}*/
