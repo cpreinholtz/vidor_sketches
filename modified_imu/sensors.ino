@@ -159,7 +159,7 @@ void get_acc(float & x, float & y){
 
     
   x =- ( (float) (atan2(rawx,rawz))  ) *RAD_TO_DEG;
-  y = ( (float) (atan2(rawy,rawz))  ) *RAD_TO_DEG;
+  y =- ( (float) (atan2(rawy,rawz))  ) *RAD_TO_DEG;
 }
 
 
@@ -179,8 +179,8 @@ void get_gyro_rate(float & x, float & y,float & z ){
   //Convert Gyro raw to degrees per second
 
   //flip x and y so it agrees with the ACC
-  y =  bytes_to_int(buff[0] , buff[1] ) * G_GAIN; 
-  x =  bytes_to_int(buff[2] , buff[3] ) * G_GAIN; 
+  x =  bytes_to_int(buff[2] , buff[3] ) * G_GAIN;   
+  y = - bytes_to_int(buff[0] , buff[1] ) * G_GAIN; 
   z = -bytes_to_int(buff[4] , buff[5] ) * G_GAIN; 
 
 }
@@ -306,7 +306,7 @@ void setup_bmp(void)
     displaySensorDetails();
   }
   else{
-    Serial.println("No IMU!");
+    Serial.println("No BMP!");
   }
 }
 

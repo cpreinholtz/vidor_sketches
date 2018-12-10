@@ -9,17 +9,6 @@ Throttle throttle;
 PidError eroll, epitch, eyaw, eheight;
 PidConstants kroll,kpitch,kyaw, kheight;
 
-//PID
-//const float i_error_max=100* LOOP_PERIOD;   //100 degrees of integrated error maximun (factoring in that int error is not scaled by dt)
-#define i_error_max (100* LOOP_PERIOD)
-
-
-#define FL  1
-#define FR  2
-#define BL  3
-#define BR  4
-
-
 
 
 
@@ -40,7 +29,7 @@ void flight_control(void){
   get_all_errors();
   get_all_pid();
   apply_all_errors();
-  send_all_to_motors();    
+  send_throttle_to_motors();    
 }
 
 void get_all_pid(void){
@@ -52,7 +41,7 @@ void get_all_pid(void){
 
 //gets errors for Attitudes
 void get_all_errors(void){
-  get_single_error(eroll, normalise(measured.roll - desired.roll);
+  get_single_error(eroll, normalise(measured.roll - desired.roll));
   get_single_error(epitch, normalise(measured.pitch - desired.pitch));  
   get_single_error(eyaw, normalise(measured.yaw - desired.yaw));
   
@@ -60,7 +49,7 @@ void get_all_errors(void){
 }
 
 
-void normalise(float e){//d, float m){
+float normalise(float e){//d, float m){
 
   //float e=m-d;
 
@@ -80,32 +69,79 @@ void apply_all_errors(){
     throttle.br=desired.throttle;
     
     apply_roll( );
-    //apply_pitch( );
-    //apply_yaw( );
+    apply_pitch( );
+    apply_yaw( );
     //apply_height( );
    
     limit_throttle();//dont get out of hand now children...
 }
 
 
-void send_all_to_motors(void){
+void send_throttle_to_motors(void){
     if(flight_mode==flight){
       if (ENABLE_PWM){
         pwm.setPWM(FL, 0, (int)throttle.fl);   
         pwm.setPWM(FR, 0, (int)throttle.fr);   
         pwm.setPWM(BL, 0, (int)throttle.bl);   
         pwm.setPWM(BR, 0, (int)throttle.br);  
-      }     
-
-    }  
+      } 
+    }
+    else{
+      set_all_motors(motor_min);
+    }
 
 }
 
 
+void set_all_motors(int value){
+  if (ENABLE_PWM){
+    if (value<=motor_min){
+      pwm.setPWM(FL, 0, motor_min);   
+      pwm.setPWM(FR, 0, motor_min);   
+      pwm.setPWM(BR, 0, motor_min);   
+      pwm.setPWM(BL, 0, motor_min);       
+    }
+    else if( value>=motor_max){
+      pwm.setPWM(FL, 0, motor_max);   
+      pwm.setPWM(FR, 0, motor_max);   
+      pwm.setPWM(BL, 0, motor_max);   
+      pwm.setPWM(BR, 0, motor_max);    
+    }
+    else{
+      pwm.setPWM(FL, 0, value);   
+      pwm.setPWM(FR, 0, value);   
+      pwm.setPWM(BL, 0, value);   
+      pwm.setPWM(BR, 0, value);  
 
-    
 
-    
+      
+    }
+  }
+
+  
+}
+
+void pwm_t(void){
+
+  if (not on){
+    int channel=0;
+    int val=4096;
+    for (channel=0; channel<16;channel++){    
+      pwm.setPWM(channel, val, 0);  
+      Serial.print("setting_motor_to all on:"); Serial.print(val);
+      Serial.println();
+    }   
+  }
+  else if (on){
+    int channel=0;
+    int val=4096;
+    for (channel=0; channel<16;channel++){    
+      pwm.setPWM(channel, 0,val);  
+      Serial.print("setting_motor_to all off:"); Serial.print(val);
+      Serial.println();
+    }   
+  }
+}
 
 ///////////////////////////////////////////////////////
 //ERROR AND PID
@@ -115,16 +151,16 @@ void get_single_error(PidError & err, float temp ){
   //else if(measured-desired>180.0)desied+=180.0;
   
   //float temp=measure-desire;
-  err.d=temp-err.d;
+  err.d=temp-err.p;
   
   err.p=temp;
-  if(!liftoff){
-    err.i=0.0;
-  }else{
+  //if(!liftoff){
+   // err.i=0.0;
+  //}else{
     err.i+=temp;
     if (err.i>=i_error_max)err.i=i_error_max;
     else if (err.i<=-i_error_max)err.i=-i_error_max;
-  }
+  //}
 }
 
 /*
@@ -167,7 +203,7 @@ float get_pid_result(PidError err, PidConstants constant){
 /////////////////////////////////////////////////
 //sides
 void apply_roll(){
-
+//positive roll error means we are rolloed too far right, increase right throttle
   throttle.fl-=pid_result.roll;
   throttle.bl-=pid_result.roll;
   
@@ -188,6 +224,8 @@ void apply_roll(){
 
 //front/back 
 void apply_pitch(){
+
+//positive pitch error means we are pitched too far forward(los is up and the craft is moving backward), increase back throttle
   throttle.fl-=pid_result.pitch;  
   throttle.fr-=pid_result.pitch;  
   
@@ -209,13 +247,14 @@ void apply_pitch(){
 //opposites
 void apply_yaw(){
 
-  
-  throttle.fl-=pid_result.yaw;  
-  throttle.br-=pid_result.yaw;
+  //positive yaw error means we are to far cw, yaw the craft ccw by increasing throttle to cw motors(fl, and br)
+  //cw motor spin
+  throttle.fl+=pid_result.yaw;  
+  throttle.br+=pid_result.yaw;
 
-  
-  throttle.fr+=pid_result.yaw;    
-  throttle.bl+=pid_result.yaw;
+  //ccw motor spin
+  throttle.fr-=pid_result.yaw;    
+  throttle.bl-=pid_result.yaw;
   
 
   
@@ -272,30 +311,29 @@ void calibrate_esc(void){
   Serial.println("plug in ESCs, beeps will increase in pitch, followed by a beep matching the pitch, press any key to continue...");
   while(!Serial.available());
   Serial.flush();
+  delay(100);  while(Serial.available()) Serial.read(); delay(100);
   
   int i;
-  for(i=motor_max; i>=motor_min; i--){
+  for(i=motor_max; i>=motor_min; i=i-1){
     set_all_motors(i);
+    Serial.println(i);
     delay(1);
   }
+  set_all_motors(motor_min);
   
   Serial.println("Throtled down to the low end, two beeps of the same pitch should be emitted, press any key to cont");      
-  Serial.println("type \"n\" to skip the last step (sets throttle up to motor_start)");
-  while(!Serial.available());
-  
-  if (Serial.read()=='n') return;
+  while(!Serial.available());  
+  //if (Serial.read()=='n') return;
   Serial.flush();
-  
-  for(i=motor_min; i<=motor_start; i++){
-    set_all_motors(i);
-    delay(1);
-  }
-  
-  Serial.println("Throtled up to motor_start, three beeps should be emitted, press any key to cont");
-  while(!Serial.available());
-  Serial.flush();
+  delay(100);  while(Serial.available()) Serial.read(); delay(100);
 
+  Serial.println("Done With Calibration");  
+  
 }
+
+
+
+
 
 
 
@@ -362,29 +400,5 @@ void setup_motors(void){
   
 }
 
-void set_all_motors(int value){
-  if (ENABLE_PWM){
-    if (value<=motor_min){
-      pwm.setPWM(FL, 0, motor_min);   
-      pwm.setPWM(FR, 0, motor_min);   
-      pwm.setPWM(BR, 0, motor_min);   
-      pwm.setPWM(BL, 0, motor_min);       
-    }
-    else if( value>=motor_max){
-      pwm.setPWM(FL, 0, motor_max);   
-      pwm.setPWM(FR, 0, motor_max);   
-      pwm.setPWM(BL, 0, motor_max);   
-      pwm.setPWM(BR, 0, motor_max);    
-    }
-    else{
-      pwm.setPWM(FL, 0, value);   
-      pwm.setPWM(FR, 0, value);   
-      pwm.setPWM(BL, 0, value);   
-      pwm.setPWM(BR, 0, value);  
-    }
-  }
-
-  
-}
 
 

@@ -46,7 +46,7 @@ void get_command(void){
       Serial.println("");
       client.flush();
       
-      switch_flight_mode();
+      get_desired();
       //get_numeric_command();
     }
   }
@@ -59,7 +59,7 @@ void get_command(void){
       Serial.print(epoch);
       Serial.println("");
 
-      switch_flight_mode();
+      get_desired();
       //get_numeric_command();
     }
   }  
@@ -69,95 +69,12 @@ void get_command(void){
 
 
 
-
-
-void switch_flight_mode(void){
-
-  if (command>='0'&& command <='9'){
-    get_desired();
-  }
-
-  //switches based on key pressed to get the command mode
-  switch(command){
-    case 'o'://orientation_mode
-      if (flight_mode==idle){
-        flight_mode=orientation_mode;     
-        Serial.println("Entering orientation_mode Mode");
-      }    
-    break;
-    
-    case 'k'://kill / idle
-      flight_mode=idle;
-      Serial.println("Entering IDLE Mode");
-    break;
-    
-    case 'c'://calibration
-      if (flight_mode==idle){
-        flight_mode=esc_calibration;  
-        Serial.println("Entering Calibration Mode");      
-      }   
-    break;
-
-    case 't'://throttle (no PID corrections)
-      if (flight_mode==idle){
-        flight_mode=throttle_test;  
-        Serial.println("Entering throttle test Mode");      
-      }    
-    break;
-    
-    case 's'://throttle (no PID corrections)
-      if (flight_mode==idle){
-        flight_mode=sensor_test;  
-        Serial.println("Entering sensor test Mode");      
-      }    
-    break;
-
-    case 'e'://throttle (no PID corrections)
-      if (flight_mode==idle){
-        flight_mode=error_test;  
-        Serial.println("Entering error test Mode");      
-      }    
-    break;
-
-    case 'd'://throttle (no PID corrections)
-      if (flight_mode==idle){
-        flight_mode=desired_test;  
-        Serial.println("Entering desired test Mode");      
-      }    
-    break;
-
-    case 'f'://fly
-      if (flight_mode==orientation_mode||flight_mode==hover){
-        flight_mode=flight;   
-        Serial.println("Entering flight Mode");     
-      }    
-    break;
-
-
-    case 'h'://hover
-      if (flight_mode==hover){
-        flight_mode=hover;   
-        Serial.println("Entering hover Mode");     
-      }    
-    break;
-
-
-    
-
-    default:
-    break;
-    
-  }  
-}
-
-
 void get_desired(void){
   get_desired_raw();
   get_flight_desired();
   //if (flight_mode==flight)get_flight_desired();
   //else if (flight_mode!=flight)get_idle_desired();
-   
-  
+     
   
 }
 
@@ -200,6 +117,117 @@ void get_desired_raw(void){
       case '5':default:
         //get_idle_desired();
       break;
+
+
+
+
+        //switches based on key pressed to get the command mode
+    case 'o'://orientation_mode
+      if (flight_mode==idle){
+        flight_mode=orientation_mode;     
+        Serial.println("Entering orientation_mode Mode");
+      }    
+    break;
+    case 'O'://orientation_mode
+      if (flight_mode==idle){
+        flight_mode=test_orientation_mode;     
+        Serial.println("Entering orientation_mode Mode");
+      }    
+    break;
+    
+    case 'k'://kill / idle
+      set_all_motors(motor_min);
+      flight_mode=idle;
+      desired.throttle=motor_min;      
+      Serial.println("Entering IDLE Mode");
+    break;
+    
+    case 'c'://calibration
+      if (flight_mode==idle){
+        flight_mode=esc_calibration;  
+        Serial.println("Entering Calibration Mode");      
+      }   
+    break;
+    case 'C'://calibration
+      if (flight_mode==idle){
+        flight_mode=idle;  
+        Serial.println("Entering Calibration Mode"); 
+        //high_calibration();
+             
+      }   
+    break;
+
+    case 't':
+      if (flight_mode==idle){
+        flight_mode=throttle_test;  
+        Serial.println("Entering throttle test Mode");      
+      }    
+    break;
+    
+    case 'm'://diect throttle (no PID corrections)
+      if (flight_mode==idle){
+        flight_mode=motor_direct;  
+        Serial.println("Entering motor direct throttle test Mode");      
+      }    
+    break;
+    
+    case 's':
+      if (flight_mode==idle){
+        flight_mode=sensor_test;  
+        Serial.println("Entering sensor test Mode");      
+      }    
+    break;
+
+    case 'r':
+      if (flight_mode==idle){
+        flight_mode=error_roll_test;  
+        Serial.println("Entering error roll test Mode");      
+      }    
+    break;
+
+    case 'p':
+      if (flight_mode==idle){
+        flight_mode=error_pitch_test; 
+        Serial.println("Entering error pitch test Mode");      
+      }    
+    break;
+    case 'y':
+      if (flight_mode==idle){
+        flight_mode=error_yaw_test;  
+        Serial.println("Entering error yaw test Mode");      
+      }    
+    break;
+    case 'i':
+      if (flight_mode==idle){
+        flight_mode=pwm_test;  
+        Serial.println("Entering pid test Mode");      
+      }    
+      
+      
+      pwm_t();on=not on;
+    break;
+
+    case 'd':
+      if (flight_mode==idle){
+        flight_mode=desired_test;  
+        Serial.println("Entering desired test Mode");      
+      }    
+    break;
+
+    case 'f'://fly
+      if (flight_mode==orientation_mode||flight_mode==hover){
+        flight_mode=flight;   
+        Serial.println("Entering flight Mode");     
+      }    
+    break;
+
+/*
+    case 'h'://hover
+      if (flight_mode==hover){//TODO
+        flight_mode=hover;   
+        Serial.println("Entering hover Mode");     
+      }    
+    break;*/
       
 
     }
@@ -210,7 +238,7 @@ void get_desired_raw(void){
 void get_flight_desired(void){
 
   desired.roll=desired_raw.roll+offset.roll;  
-  desired.pitch=desired_raw.pitch+offset.roll;
+  desired.pitch=desired_raw.pitch+offset.pitch;
   
   desired.yaw=desired.yaw+desired_raw.yaw;//offset already applied in yaw
   if (desired.yaw>360.0)desired.yaw-=360;

@@ -46,7 +46,7 @@ void loop() {
 }
 
 
-
+bool on=false;
 
 void dostuff(void){
   switch(flight_mode){
@@ -65,6 +65,7 @@ void dostuff(void){
     case orientation_mode: 
       idle_control();  
       calc_offsets(); 
+      desired.throttle=(motor_min);
       print_offset(); 
     break;
 
@@ -76,6 +77,13 @@ void dostuff(void){
 
 //////////////////////////////
 //tests
+    case test_orientation_mode: 
+      idle_control();  
+      calc_offsets(); 
+      //desired.throttle=(motor_min);
+      print_offset(); 
+    break;
+    
     case sensor_test:
       flight_control();
       print_measured();
@@ -87,15 +95,33 @@ void dostuff(void){
       //print_desired_raw();
     break;
     
-    case error_test:
+    case error_roll_test:
       flight_control();
       print_eroll();
     break;
-
+    
+    case error_pitch_test:
+      flight_control();
+      print_epitch();
+    break;
+    
+    case error_yaw_test:
+      flight_control();
+      print_eyaw();
+    break;
+    
+    case motor_direct:
+      set_all_motors(desired.throttle);      
+      print_desired();
+    break;
     
     case throttle_test:
       flight_control();
       print_throttle();
+    break;
+    case pwm_test:
+
+    
     break;
 
 //////////////////////////////
