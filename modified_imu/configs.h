@@ -18,7 +18,8 @@
 #define error_yaw_test 1024
 #define motor_direct 2048
 #define test_orientation_mode 5096
-#define pwm_test 5097
+#define general_test 5097
+#define transform_test 5098
 #define hover 0 //unsupported right now
 
 
@@ -61,12 +62,13 @@
 
 
 //global variables
-extern float G;//definition located at the top of "sensors"
-extern float A;
+extern const float G,A;
+extern float heading;
 extern Attitude desired, measured, desired_raw, offset;
 extern Throttle throttle;
 extern PidError eroll, epitch, eyaw, eheight;
 extern PidConstants kroll,kpitch,kyaw, kheight;
+extern Fcart acc_pos, gyro_rate, gyro_pos, cfilter; 
 
 
 //Dont Touch
@@ -75,6 +77,10 @@ extern PidConstants kroll,kpitch,kyaw, kheight;
 //PID
 //const float i_error_max=100* LOOP_PERIOD;   //100 degrees of integrated error maximun (factoring in that int error is not scaled by dt)
 #define i_error_max (100* LOOP_PERIOD)
+
+
+
+
 
 
 

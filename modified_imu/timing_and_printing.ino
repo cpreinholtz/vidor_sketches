@@ -32,6 +32,23 @@ void regulate_time(unsigned long startTime){
 
 
 
+///////////////////////////////////////////////////
+//General  prints
+void print_Icart(Icart f){
+  Serial.print("x: ");Serial.print(f.x);Serial.print("\t\t");  
+  Serial.print("y: ");Serial.print(f.y);Serial.print("\t\t");  
+  Serial.print("z: ");Serial.print(f.z);Serial.print("\t\t");  
+  Serial.println("");
+}
+
+
+void print_Fcart(Fcart f){
+  Serial.print("x: ");Serial.print(f.x);Serial.print("\t\t");  
+  Serial.print("y: ");Serial.print(f.y);Serial.print("\t\t");  
+  Serial.print("z: ");Serial.print(f.z);Serial.print("\t\t");  
+  Serial.println("");
+}
+
 
 void print_Throttle(Throttle t){
   Serial.print("fl: ");Serial.print(t.fl);Serial.print("\t\t");  
@@ -61,7 +78,7 @@ void print_error(PidError e){
 
 
 ///////////////////////////////////////////
-
+//Dedicated prints
 void print_measured(void){
   Serial.print("measured ");
   print_attitude(measured);
@@ -111,40 +128,29 @@ void print_eyaw(void){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+/////////////////////////////////////
+//XYZ
 void print_x(void){
-  Serial.print("gx: ");Serial.print(gx);Serial.print("\t\t");
-  Serial.print("ax: ");Serial.print(ax);Serial.print("\t\t");
-  Serial.print("px: ");Serial.print(px);Serial.print("\t\t");
-  Serial.print("cx: ");Serial.print(cx);Serial.print("\t\t");
+  Serial.print("gx: ");Serial.print(gyro_rate.x);Serial.print("\t\t");
+  Serial.print("ax: ");Serial.print(acc_pos.x);Serial.print("\t\t");
+  Serial.print("px: ");Serial.print(gyro_pos.x);Serial.print("\t\t");
+  Serial.print("cx: ");Serial.print(cfilter.x);Serial.print("\t\t");
   Serial.println("");
 }
 
 void print_y(void){
-  Serial.print("gy: ");Serial.print(gy);Serial.print("\t\t");
-  Serial.print("ay: ");Serial.print(ay);Serial.print("\t\t");
-  Serial.print("py: ");Serial.print(py);Serial.print("\t\t");
-  Serial.print("cy: ");Serial.print(cy);Serial.print("\t\t");
+  Serial.print("gy: ");Serial.print(gyro_rate.y);Serial.print("\t\t");
+  Serial.print("ay: ");Serial.print(acc_pos.y);Serial.print("\t\t");
+  Serial.print("py: ");Serial.print(gyro_pos.y);Serial.print("\t\t");
+  Serial.print("cy: ");Serial.print(cfilter.y);Serial.print("\t\t");
   Serial.println("");
 }
 
 void print_z(void){
-  Serial.print("gz: ");Serial.print(gz);Serial.print("\t\t");
-  Serial.print("mh: ");Serial.print(h);Serial.print("\t\t");
-  Serial.print("pz: ");Serial.print(pz);Serial.print("\t\t");
-  Serial.print("cz: ");Serial.print(cz);Serial.print("\t\t");
+  Serial.print("gz: ");Serial.print(gyro_rate.z);Serial.print("\t\t");
+  Serial.print("head: ");Serial.print(heading);Serial.print("\t\t");
+  Serial.print("pz: ");Serial.print(gyro_pos.z);Serial.print("\t\t");
+  Serial.print("cz: ");Serial.print(cfilter.z);Serial.print("\t\t");
   Serial.println("");
 }
 

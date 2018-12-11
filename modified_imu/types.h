@@ -44,6 +44,22 @@ struct attitude  //type
 };
 typedef struct attitude Attitude;    
 
+struct fcartesian  //type
+{
+   float x;
+   float y;
+   float z;
+};
 
+typedef struct fcartesian Fcart; 
+   
+struct icartesian  //type
+{
+   int x;
+   int y;
+   int z;
+};
+
+typedef struct icartesian Icart;   
 
 #endif

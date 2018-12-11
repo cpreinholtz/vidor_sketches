@@ -84,6 +84,11 @@ void dostuff(void){
       print_offset(); 
     break;
     
+    case transform_test: 
+      get_measured();  
+      print_measured(); 
+    break;
+    
     case sensor_test:
       flight_control();
       print_measured();
@@ -119,7 +124,10 @@ void dostuff(void){
       flight_control();
       print_throttle();
     break;
-    case pwm_test:
+    
+    case general_test:
+      get_measured();
+      print_z();
 
     
     break;

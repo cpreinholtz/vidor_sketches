@@ -170,6 +170,13 @@ void get_desired_raw(void){
         Serial.println("Entering motor direct throttle test Mode");      
       }    
     break;
+
+    case 'q':
+      if (flight_mode==idle){
+        flight_mode=transform_test;  
+        Serial.println("Entering transform test Mode");      
+      }    
+    break;
     
     case 's':
       if (flight_mode==idle){
@@ -197,10 +204,10 @@ void get_desired_raw(void){
         Serial.println("Entering error yaw test Mode");      
       }    
     break;
-    case 'i':
+    case 'g':
       if (flight_mode==idle){
-        flight_mode=pwm_test;  
-        Serial.println("Entering pid test Mode");      
+        flight_mode=general_test;  
+        Serial.println("Entering General test Mode");      
       }    
       
       
