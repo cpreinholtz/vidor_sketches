@@ -17,13 +17,17 @@ Set the radio throttle or servo tester to the highest position, then connect pow
 motor should produce a series of initialization beeps increasing in pitch, followed by another beep 
 matching the pitch of the last initialization beep. This indicates that the calibration mode has been 
 entered, and the pulse length has been learned.
+
 2
 Move the stick or knob to the lowest position. Two beeps of the same pitch should be emitted. This
-indicates that the low pulse length has been learned. 
+indicates that the low pulse length has been learned.
+ 
 3
 If the RC Car-style reversible mode has been 
 enabled (RC_PULS_NEUTRAL), move the stick or knob to the center, and wait for three beeps. This 
 indicates that the neutral (center) pulse length has been learned
+
+
 
 # References:
 
@@ -55,6 +59,12 @@ https://cdn-shop.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
 
 Presure sensor repo:
 https://github.com/adafruit/Adafruit_BMP085_Unified
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Quaternion: 
+https://github.com/Tyrint/Razor-IMU
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
