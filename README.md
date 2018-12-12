@@ -2,10 +2,21 @@
 
 BetaPhase...
 
-# TODO:
-  Watchdog for commands
-  Presure Soensor
-  experiment with udp telem?
+# Dependancies:
+  
+Native:
+  
+Wifi nina
+
+Vidor periphrials
+
+adafruit servo blaster
+
+optional: Adafruin BMP085-BMP180
+
+Install yourself:
+
+Berry IMU
 
 # Vidor Pinout
 
