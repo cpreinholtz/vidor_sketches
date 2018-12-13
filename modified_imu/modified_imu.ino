@@ -72,7 +72,8 @@ void dostuff(void){
 
     case flight:
       flight_control();
-      print_x();
+      //print_x();
+      print_throttle();
     break;
 
 
@@ -160,7 +161,7 @@ void setup() {
   
   setup_wifi();
   setup_imu();
-  setup_bmp();
+  //setup_bmp();
   setup_pid();
   setup_motors();
 

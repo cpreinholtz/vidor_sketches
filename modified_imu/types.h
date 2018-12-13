@@ -15,15 +15,15 @@ struct pid_constants  //type
 };
 typedef struct pid_constants PidConstants;
 
-
+/*
 struct pid_error  //type
 {
-   float p;
-   float i;
-   float d;
+   float kp;
+   float ki;
+   float kd;
    //...
 };
-typedef struct pid_error PidError;
+typedef struct pid_error PidError;*/
 
 struct throttle_container  //type
 {

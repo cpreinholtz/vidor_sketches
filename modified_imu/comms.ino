@@ -92,6 +92,7 @@ void get_desired_raw(void){
   desired_raw.yaw=0.0;
   desired_raw.yaw=0.0;
   desired_raw.throttle=0.0;
+  String infloat;
   
   float diff=5.0;
 //  flaot tdiff=
@@ -134,7 +135,95 @@ void get_desired_raw(void){
         flight_mode=orientation_mode;     
         Serial.println("Entering orientation_mode Mode");
       }    
+    break;  
+     
+
+    
+    case 'k':case '0'://kill / idle
+      set_all_motors(motor_min);
+      flight_mode=idle;
+      desired.throttle=motor_min;      
+      Serial.println("Entering IDLE Mode");
     break;
+
+    
+    case 'f'://fly
+      if (flight_mode==orientation_mode||flight_mode==hover){
+        flight_mode=flight;   
+        Serial.println("Entering flight Mode");     
+      }    
+    break;
+
+
+
+    ////////////////////////////////////
+    case 'c'://calibration
+      if (flight_mode==idle){
+        flight_mode=esc_calibration;  
+        Serial.println("Entering Calibration Mode");      
+      }   
+    break;
+
+    
+    case 'm'://diect throttle (no PID corrections)
+      if (flight_mode==idle){
+        flight_mode=motor_direct;  
+        Serial.println("Entering motor direct throttle test Mode");      
+      }    
+    break;
+
+
+
+    /////////////////////////////////////
+    //PID "on the fly"
+
+    case 'p':;
+      Serial.print("Adjusting p:");    
+      delay(100);
+      infloat="";
+      while (Serial.available()>0){
+        char inchar=Serial.read( );
+        if  (inchar != '\n') infloat+=inchar;
+      }
+      kroll.kp=infloat.toFloat();
+      kpitch.kp=infloat.toFloat();
+      //print_PidConstants(kroll);  
+      //print_PidConstants(kpitch);
+    break;
+
+    case 'i':;
+      Serial.print("Adjusting i:");     
+      delay(100);
+      infloat="";
+      while (Serial.available()>0){
+        char inchar=Serial.read( );
+        if  (inchar != '\n') infloat+=inchar;
+      }
+      kroll.ki=infloat.toFloat();
+      kpitch.ki=infloat.toFloat();
+      //print_PidConstants(kroll); 
+      //print_PidConstants(kpitch); 
+    break;
+
+    case 'd':;
+      Serial.print("Adjusting p:");   
+      delay(100);
+      infloat="";
+      while (Serial.available()>0){
+        char inchar=Serial.read( );
+        if  (inchar != '\n') infloat+=inchar;
+      }
+      kroll.kd=infloat.toFloat();
+      kpitch.kd=infloat.toFloat();  
+      //print_PidConstants(kpitch);  
+    break;
+
+
+
+
+
+
+/*    
     case 'O'://orientation_mode
       if (flight_mode==idle){
         flight_mode=test_orientation_mode;     
@@ -142,27 +231,7 @@ void get_desired_raw(void){
       }    
     break;
     
-    case 'k'://kill / idle
-      set_all_motors(motor_min);
-      flight_mode=idle;
-      desired.throttle=motor_min;      
-      Serial.println("Entering IDLE Mode");
-    break;
-    
-    case 'c'://calibration
-      if (flight_mode==idle){
-        flight_mode=esc_calibration;  
-        Serial.println("Entering Calibration Mode");      
-      }   
-    break;
-    case 'C'://calibration
-      if (flight_mode==idle){
-        flight_mode=idle;  
-        Serial.println("Entering Calibration Mode"); 
-        //high_calibration();
-             
-      }   
-    break;
+
 
     case 't':
       if (flight_mode==idle){
@@ -171,12 +240,7 @@ void get_desired_raw(void){
       }    
     break;
     
-    case 'm'://diect throttle (no PID corrections)
-      if (flight_mode==idle){
-        flight_mode=motor_direct;  
-        Serial.println("Entering motor direct throttle test Mode");      
-      }    
-    break;
+
 
     case 'q':
       if (flight_mode==idle){
@@ -226,14 +290,8 @@ void get_desired_raw(void){
         flight_mode=desired_test;  
         Serial.println("Entering desired test Mode");      
       }    
-    break;
+    break;*/
 
-    case 'f'://fly
-      if (flight_mode==orientation_mode||flight_mode==hover){
-        flight_mode=flight;   
-        Serial.println("Entering flight Mode");     
-      }    
-    break;
 
 /*
     case 'h'://hover

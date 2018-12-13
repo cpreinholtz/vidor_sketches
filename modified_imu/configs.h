@@ -31,10 +31,10 @@
 #define motor_max 1400
 #define motor_start 821
 
-#define FL  0
-#define FR  1
-#define BL  2
-#define BR  3
+#define FL  8
+#define FR  9
+#define BL  10
+#define BR  11
 
 
 
@@ -72,7 +72,7 @@ extern Fcart acc_pos, gyro_rate, gyro_pos, cfilter;
 
 
 //Dont Touch
-#define LOOP_PERIOD 0.02
+#define LOOP_PERIOD 0.01 //currently executes around 7-8 ms
 #define G_GAIN 0.070    // [deg/s/LSB]  //DONT CHANGE UNLESS CHANGING THE GYRO SCALE
 //PID
 //const float i_error_max=100* LOOP_PERIOD;   //100 degrees of integrated error maximun (factoring in that int error is not scaled by dt)

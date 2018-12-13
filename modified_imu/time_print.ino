@@ -77,6 +77,15 @@ void print_error(PidError e){
 }
 
 
+
+void print_PidConstants(PidConstants c){
+  Serial.print("kp: ");Serial.print(c.kp);Serial.print("\t\t");
+  Serial.print("ki: ");Serial.print(c.ki);Serial.print("\t\t");
+  Serial.print("kd: ");Serial.print(c.kd);Serial.print("\t\t");
+  Serial.println("");
+}
+
+
 ///////////////////////////////////////////
 //Dedicated prints
 void print_measured(void){

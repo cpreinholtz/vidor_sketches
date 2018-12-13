@@ -103,39 +103,27 @@ void pwm_t(void){
 }
 
 ///////////////////////////////////////////////////////
-//ERROR AND PID
+//ERROR
 void get_single_error(PidError & err, float temp ){
   
   //if(desired-measured>180.0)desied-=180.0;//normalise desired to get the closest path to stability
-  //else if(measured-desired>180.0)desied+=180.0;
-  
+  //else if(measured-desired>180.0)desied+=180.0;  
   //float temp=measure-desire;
-  err.d=temp-err.p;
+  //err.d=(temp-err.p)/LOOP_PERIOD;
   
   err.p=temp;
-  //if(!liftoff){
-   // err.i=0.0;
-  //}else{
-    err.i+=temp;
-    if (err.i>=i_error_max)err.i=i_error_max;
-    else if (err.i<=-i_error_max)err.i=-i_error_max;
-  //}
+  
+  //err.i+=temp*LOOP_PERIOD;
+  if (err.i>=i_error_max)err.i=i_error_max;
+  else if (err.i<=-i_error_max)err.i=-i_error_max;
+
 }
 
-/*
-//accounts for the 0-360 range near north
-void get_yaw_error(PidError & err, float desire, float measure){
 
-  
-  float temp=measure-desire;
-  err.d=temp-err.d;
-  err.i+=temp;
-  err.p=temp;
-  if(!liftoff){
-    err.i=0.0;
-  }
-}*/
 
+
+//////////////////////////////////////////////////////////////////////////
+//PID
 //calculates kp*p+ki*i+kd*d and returns result after max and min is applied
 float get_pid_result(PidError err, PidConstants constant){
   float result=0.0;      
@@ -143,15 +131,7 @@ float get_pid_result(PidError err, PidConstants constant){
   result+=constant.kp*err.p;//P
   result+=constant.ki*err.i;//I
   result+=constant.kd*err.d; //D
-  
-  /*if (result>=constant.max){
-    result=constant.max;
-    Serial.println("PID MAX HIT!");
-  }
-  else if(result<=constant.min){
-    result=constant.min;
-    Serial.println("PID MIN HIT!");
-  }*/
+
   return result;   
 }
     
@@ -169,16 +149,7 @@ void apply_roll(){
   throttle.fr+=pid_result.roll;
   throttle.br+=pid_result.roll;
 
-/*
-  
-  if (res>0.0){   //roll right for + desired roll
-    throttle.fl+=pid_result.roll;
-    throttle.bl+=res;
-  }
-  else{
-    throttle.fr+=res;
-    throttler.br+=res;
-  }     */       
+    
 }
 
 //front/back 
@@ -191,16 +162,7 @@ void apply_pitch(){
   throttle.bl+=pid_result.pitch;
   throttle.br+=pid_result.pitch;
 
-
-  /*
-  if (res>0.0){   //pitch forward up for + desired pitch
-    throttle.fl+=res;
-    throttle.fr+=res;
-  }
-  else{
-    throttle.bl+=res;
-    throttle.br+=res;
-  }     */       
+  
 }
 
 //opposites
@@ -217,27 +179,15 @@ void apply_yaw(){
   
 
   
-  /*
-  if (res>0.0){   // yaw cw for + desired heading
-    throttle.fr+=res;//fr spins ccw,
-    throttle.bl+=res;//bl spins ccw,
-  }
-  else{
-    throttle.fl+=res; //fl spins cw, 
-    throttle.br+=res; //br spins cw, 
-  }   */         
+  
 }
-/*
-//all4
-void apply_height(Throttle &throt, float res){
 
-  throt.fr+=res;//fr spins ccw,
-  throt.bl+=res;//bl spins ccw,
-  throt.fl+=res; //fl spins cw, 
-  throt.br+=res; //br spins cw,
-        
-}*/
 
+
+
+
+
+//////////////////////////////////////////////////
 //cap at max and min
 void limit_throttle(void){
   if (throttle.fl>=motor_max)throttle.fl=motor_max;
@@ -316,27 +266,32 @@ void setup_pid(void){
   measured.yaw=0.0;
   
   //Tune-able Parameters!!! 
-  kroll.kp=1.0;
-  kroll.ki=0.0 * LOOP_PERIOD;
-  kroll.kd=0.0 / LOOP_PERIOD;    
+  float kp=0.5;
+  float ki=0.0;
+  float kd=0.0;
+  
+  kroll.kp=kp;
+  kroll.ki=ki;
+  kroll.kd=kd;    
   //kroll.min= motor_max-motor_start *  -0.1 ;
   //kroll.max= motor_max-motor_start *   0.1 ;
 
-  kpitch.kp=1.0;
-  kpitch.ki=0.0 * LOOP_PERIOD;
-  kpitch.kd=0.0 / LOOP_PERIOD;
+  kpitch.kp=kp;
+  kpitch.ki=ki;
+  kpitch.kd=kd;
   //kpitch.min= motor_max-motor_start * -0.1 ;
   //kpitch.max= motor_max-motor_start *  0.1 ;
 
-  kyaw.kp=0.05;
-  kyaw.ki=0.0 * LOOP_PERIOD;
-  kyaw.kd=0.0 / LOOP_PERIOD;
+  //kyaw.kp=0.05;
+  kyaw.kp=0.00;
+  kyaw.ki=0.0;
+  kyaw.kd=0.0;
   //kyaw.min= motor_max-motor_start  *  -0.1 ;
   //kyaw.max= motor_max-motor_start *  0.1 ;
 
-  kheight.kp=1.0;
-  kheight.ki=0.0 * LOOP_PERIOD;
-  kheight.kd=0.0 / LOOP_PERIOD;    
+  kheight.kp=0.0;
+  kheight.ki=0.0;
+  kheight.kd=0.0;    
   //kheight.min= motor_max-motor_start *  -0.1 ;
   //kheight.max= motor_max-motor_start *   0.1 ;
 
