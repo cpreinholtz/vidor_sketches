@@ -125,6 +125,19 @@ void get_desired_raw(void){
         //get_idle_desired();
       break;
 
+    case '0': case'k'://kill / idle
+      set_all_motors(motor_min);
+      flight_mode=idle;
+      desired.throttle=motor_min;      
+      Serial.println("Entering IDLE Mode");
+    break;
+    case 'c'://calibration
+      if (flight_mode==idle){
+        flight_mode=esc_calibration;  
+        Serial.println("Entering Calibration Mode");      
+      }   
+    break;
+
 
 
 
@@ -135,6 +148,22 @@ void get_desired_raw(void){
         Serial.println("Entering orientation_mode Mode");
       }    
     break;
+
+    case 'm'://diect throttle (no PID corrections)
+      if (flight_mode==idle){
+        flight_mode=motor_direct;  
+        Serial.println("Entering motor direct throttle test Mode");      
+      }    
+    break;
+
+    case 'f'://fly
+      if (flight_mode==orientation_mode||flight_mode==hover){
+        flight_mode=flight;   
+        Serial.println("Entering flight Mode");     
+      }    
+    break;
+
+    /*
     case 'O'://orientation_mode
       if (flight_mode==idle){
         flight_mode=test_orientation_mode;     
@@ -142,19 +171,9 @@ void get_desired_raw(void){
       }    
     break;
     
-    case 'k'://kill / idle
-      set_all_motors(motor_min);
-      flight_mode=idle;
-      desired.throttle=motor_min;      
-      Serial.println("Entering IDLE Mode");
-    break;
     
-    case 'c'://calibration
-      if (flight_mode==idle){
-        flight_mode=esc_calibration;  
-        Serial.println("Entering Calibration Mode");      
-      }   
-    break;
+    
+    
     case 'C'://calibration
       if (flight_mode==idle){
         flight_mode=idle;  
@@ -171,12 +190,7 @@ void get_desired_raw(void){
       }    
     break;
     
-    case 'm'://diect throttle (no PID corrections)
-      if (flight_mode==idle){
-        flight_mode=motor_direct;  
-        Serial.println("Entering motor direct throttle test Mode");      
-      }    
-    break;
+
 
     case 'q':
       if (flight_mode==idle){
@@ -228,12 +242,10 @@ void get_desired_raw(void){
       }    
     break;
 
-    case 'f'://fly
-      if (flight_mode==orientation_mode||flight_mode==hover){
-        flight_mode=flight;   
-        Serial.println("Entering flight Mode");     
-      }    
-    break;
+
+
+
+*/
 
 /*
     case 'h'://hover
