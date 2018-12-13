@@ -25,16 +25,15 @@
 
 //motors
 //#define pwm_frequency 60  //16mS total, 4.06uS per step (4096 max)
-#define pwm_frequency 1000
-#define motor_min 1000
-//#define motor_start 1000 
-#define motor_max 2000
+#define pwm_frequency 200
+#define motor_min 1//#define motor_start 1000 
+#define motor_max 4095
 
 
-#define FL  8
-#define FR  9
-#define BL  10
-#define BR  11
+#define FL  0
+#define FR  1
+#define BL  2
+#define BR  3
 
 
 
