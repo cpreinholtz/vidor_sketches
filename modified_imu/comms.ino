@@ -92,6 +92,7 @@ void get_desired_raw(void){
   desired_raw.yaw=0.0;
   desired_raw.yaw=0.0;
   desired_raw.throttle=0.0;
+   String infloat="";
   
   float diff=5.0;
 //  flaot tdiff=
@@ -162,6 +163,50 @@ void get_desired_raw(void){
         Serial.println("Entering flight Mode");     
       }    
     break;
+    
+    case 'p'://fly
+      Serial.print("Adjusting p:");    
+      delay(100);
+      infloat="";
+      while (Serial.available()>0){
+        char inchar=Serial.read( );
+        if  (inchar != '\n') infloat+=inchar;
+      }
+      kroll.kp=infloat.toFloat();
+      kpitch.kp=infloat.toFloat();
+      //print_PidConstants(kroll);  
+      //print_PidConstants(kpitch);
+    break;
+    case 'i'://fly
+      Serial.print("Adjusting i:");     
+      delay(100);
+      infloat="";
+      while (Serial.available()>0){
+        char inchar=Serial.read( );
+        if  (inchar != '\n') infloat+=inchar;
+      }
+      kroll.ki=infloat.toFloat();
+      kpitch.ki=infloat.toFloat();
+      //print_PidConstants(kroll); 
+      //print_PidConstants(kpitch); 
+    break;
+    case 'd'://fly
+      Serial.print("Adjusting p:");   
+      delay(100);
+      infloat="";
+      while (Serial.available()>0){
+        char inchar=Serial.read( );
+        if  (inchar != '\n') infloat+=inchar;
+      }
+      kroll.kd=infloat.toFloat();
+      kpitch.kd=infloat.toFloat();  
+      //print_PidConstants(kpitch); 
+
+    break;
+
+
+
+    
 
     /*
     case 'O'://orientation_mode

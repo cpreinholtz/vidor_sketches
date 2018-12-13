@@ -314,27 +314,29 @@ void setup_pid(void){
   measured.roll=0.0;
   measured.pitch=0.0;
   measured.yaw=0.0;
+
+  float kp =0.5;
   
   //Tune-able Parameters!!! 
-  kroll.kp=1.0;
+  kroll.kp=kp;
   kroll.ki=0.0 * LOOP_PERIOD;
   kroll.kd=0.0 / LOOP_PERIOD;    
   //kroll.min= motor_max-motor_start *  -0.1 ;
   //kroll.max= motor_max-motor_start *   0.1 ;
 
-  kpitch.kp=1.0;
+  kpitch.kp=kp;
   kpitch.ki=0.0 * LOOP_PERIOD;
   kpitch.kd=0.0 / LOOP_PERIOD;
   //kpitch.min= motor_max-motor_start * -0.1 ;
   //kpitch.max= motor_max-motor_start *  0.1 ;
 
-  kyaw.kp=0.05;
+  kyaw.kp=0.00;
   kyaw.ki=0.0 * LOOP_PERIOD;
   kyaw.kd=0.0 / LOOP_PERIOD;
   //kyaw.min= motor_max-motor_start  *  -0.1 ;
   //kyaw.max= motor_max-motor_start *  0.1 ;
 
-  kheight.kp=1.0;
+  kheight.kp=0.0;
   kheight.ki=0.0 * LOOP_PERIOD;
   kheight.kd=0.0 / LOOP_PERIOD;    
   //kheight.min= motor_max-motor_start *  -0.1 ;
