@@ -53,7 +53,8 @@ void dostuff(void){
     
 //Deliverable modes    
     case idle:
-      //no measured      
+      //no measured  
+      desired.throttle=motor_min;     
       idle_control();      
     break;
         
@@ -78,7 +79,8 @@ void dostuff(void){
 //////////////////////////////
 //tests
     case test_orientation_mode: 
-      idle_control();  
+      idle_control(); 
+      desired.throttle=motor_min; 
       calc_offsets(); 
       //desired.throttle=(motor_min);
       print_offset(); 
@@ -167,10 +169,3 @@ void setup() {
  
   
 }
-
-
-
-
-
-
-

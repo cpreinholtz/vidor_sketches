@@ -1,6 +1,14 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include "secrets.h"
+
+/*
+//Add YOUR Network configs in "secrets.h":
+#define SECRET_SSID "netwrk"
+#define SECRET_PASS "pass"
+#define SECRET_PORT 1234
+#define SECRET_SERVER_IP "ip"
+ */
 #include "configs.h"
 
 
@@ -11,7 +19,6 @@ char ssid[]=SECRET_SSID;
 char pass[]=SECRET_PASS;
 unsigned int localPort = SECRET_PORT;      // local port to listen on
 char servername[]=SECRET_SERVER_IP;  // remote server we will connect to
-
 
 
 char start='{';
@@ -399,16 +406,3 @@ void setup_wifi(void) {
       
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

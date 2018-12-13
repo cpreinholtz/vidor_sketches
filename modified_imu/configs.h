@@ -25,10 +25,11 @@
 
 //motors
 //#define pwm_frequency 60  //16mS total, 4.06uS per step (4096 max)
-#define pwm_frequency 200
-#define motor_min 1//#define motor_start 1000 
-#define motor_max 4095
-
+#define pwm_frequency 1600
+#define motor_min 680//#define motor_start 1000
+#define motor_start 821 
+#define motor_max 1400
+#define motor_start 821
 
 #define FL  0
 #define FR  1
@@ -76,12 +77,3 @@ extern Fcart acc_pos, gyro_rate, gyro_pos, cfilter;
 //PID
 //const float i_error_max=100* LOOP_PERIOD;   //100 degrees of integrated error maximun (factoring in that int error is not scaled by dt)
 #define i_error_max (100* LOOP_PERIOD)
-
-
-
-
-
-
-
-
-
