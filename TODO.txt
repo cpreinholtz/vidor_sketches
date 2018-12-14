@@ -1,12 +1,114 @@
 # TODO List:
 General:
 
-Install ADAFRUIT SENSOR and ADAFRUIT BMP805
-Install the BERRY IMU as a library:
-https://www.arduino.cc/en/Guide/Libraries
-
+//checkout these functions:
+      //map()
+      //constrain()
       
+  //noInterrupts();// critical, time-sensitive code here  
+  //interrupts();// other code here
+  
+  
+#define THROTTLE_IN_MIN   1000 // TODO, test this
+#define THROTTLE_IN_MAX   2000 // 
 
+
+
+
+
+#define THROTTLE_IN_ENABLE   true // 4 
+#define ROLL_IN_ENABLE      true // 5 
+#define AUX_IN_ENABLE       true // 6 
+#define SWITCH_IN_ENABLE     true // 7
+
+#define THROTTLE_PIN    // 4 
+#define ROLL_PIN        // 5 
+#define AUX_PIN         // 6 
+#define SWITCH_PIN      // 7
+
+
+struct interrupt_timer{
+      int high_time;
+      int low_time;
+      int rising_edge;
+      int falling_edge;
+};
+typedef struct interrupt_timer interruptTimer;
+
+
+interruptTimer throttle_in={0,0,0,0};
+interruptTimer roll_in={0,0,0,0};
+interruptTimer aux_in={0,0,0,0};
+interruptTimer switch_in={0,0,0,0};
+
+void print_interruptTimer(interruptTimer i){
+      Serial.print("high_time_uS: ");Serial.print(i.high_time);Serial.print("\t\t");
+      Serial.print("low_time_uS: ");Serial.print(i.low_time);Serial.print("\t\t");
+      Serial.print("rising_edge_uS: ");Serial.print(i,rising_edge);Serial.print("\t\t");
+      Serial.print("falling_edge_uS: ");Serial.println(i.falling_edge);
+}
+
+ //SETUP
+void intterrupt_setup(void) {
+  if (THROTTLE_IN_ENABLE) attachInterrupt(THROTTLE_PIN, throttle_rising_isr, RISING);
+  if (ROLL_IN_ENABLE) attachInterrupt(ROLL_PIN, roll_rising_isr, RISING);
+  if (AUX_IN_ENABLE) attachInterrupt(AUX_PIN, aux_rising_isr, RISING);
+  if (SWITCH_IN_ENABLE) attachInterrupt(SWITCH_PIN, switch_rising_isr, RISING);
+} 
+ 
+//THROTTLE
+void throttle_rising_isr(void) {
+  attachInterrupt(THROTTLE_PIN, throttle_falling_isr, FALLING);
+  throttle_in.rising_edge = micros();
+  throttle_in.low_time = throttle_in.rising_edge - throttle_in.falling_edge;
+} 
+void throttle_falling_isr(void) {
+  attachInterrupt(THROTTLE_PIN, throttle_rising_isr, RISING);
+  throttle_in.falling_edge = micros();  
+  throttle_in.high_time = throttle_in.falling_edge - throttle_in.rising_edge;
+}
+
+//ROLL
+void roll_rising_isr(void) {
+  attachInterrupt(ROLL_PIN, roll_falling_isr, FALLING);
+  roll_in.rising_edge = micros();
+  roll_in.low_time = roll_in.rising_edge - roll_in.falling_edge;
+} 
+void roll_falling_isr(void) {
+  attachInterrupt(ROLL_PIN, roll_rising_isr, RISING);
+  roll_in.falling_edge = micros();  
+  roll_in.high_time = roll_in.falling_edge - roll_in.rising_edge;
+}
+
+//AUX
+void aux_rising_isr(void) {
+  attachInterrupt(AUX_PIN, aux_falling_isr, FALLING);
+  aux_in.rising_edge = micros();
+  aux_in.low_time = aux_in.rising_edge - aux_in.falling_edge;
+} 
+void aux_falling_isr(void) {
+  attachInterrupt(THROTTLE_PIN, aux_rising_isr, RISING);
+  aux_in.falling_edge = micros();  
+  aux_in.high_time = aux_in.falling_edge - aux_in.rising_edge;
+}
+
+//SWITCH
+void switch_rising_isr(void) {
+  attachInterrupt(THROTTLE_PIN, switch_falling_isr, FALLING);
+  switch_in.rising_edge = micros();
+  switch_in.low_time = switch_in.rising_edge - switch_in.falling_edge;
+} 
+void switch_falling_isr(void) {
+  attachInterrupt(SWITCH_PIN, switch_rising_isr, RISING);
+  switch_in.falling_edge = micros();  
+  switch_in.high_time = switch_in.falling_edge - switch_in.rising_edge;
+}
+
+
+
+
+
+desired.throttle=map(throttle_in.high_time, THROTTLE_IN_MIN, THROTTLE_IN_MAX, motor_min, motor_max);
     
     
 Quaternions:
@@ -29,7 +131,7 @@ Sensor(Embedded Software)
   
   
 LIPO contol with MKR VIDOR
-  -assess battery options?
+  -assess battery options?  --single cell only, prob just use bec is easiest
 
 CMND/STATUS (Embedded Software/ Ground Software)
     -add a little slave to poll for updated commands?
@@ -45,7 +147,7 @@ CMND/STATUS (Embedded Software/ Ground Software)
          
     
 PWM (Embedded Software)
-  -test arduino libraries with ESC, need to reflash
+  -try FPGA PWM
 
   
 Flight Controller (Embedded Software)
