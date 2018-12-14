@@ -6,19 +6,19 @@ BetaPhase...
   
 Native:
   
-Wifi nina
+  Wifi nina
 
-Vidor periphrials
+  Vidor periphrials
 
-adafruit servo blaster
+  adafruit servo blaster
 
-optional: Adafruin BMP085-BMP180
+  optional: Adafruin BMP085-BMP180
 
 Install yourself:
 
-Berry IMU
+  Berry IMU (included here... see readme in that folder)
 
-# Vidor Pinout
+
 
 
 
