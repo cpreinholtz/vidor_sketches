@@ -25,6 +25,7 @@ struct pid_error  //type
 };
 typedef struct pid_error PidError;
 
+
 struct throttle_container  //type
 {
    int fl;
@@ -44,14 +45,15 @@ struct attitude  //type
 };
 typedef struct attitude Attitude;    
 
+
 struct fcartesian  //type
 {
    float x;
    float y;
    float z;
 };
-
 typedef struct fcartesian Fcart; 
+
    
 struct icartesian  //type
 {
@@ -59,7 +61,16 @@ struct icartesian  //type
    int y;
    int z;
 };
+typedef struct icartesian Icart;  
 
-typedef struct icartesian Icart;   
+
+ 
+struct interrupt_timer{
+      volatile unsigned long high_time;
+      volatile unsigned long low_time;
+      volatile unsigned long rising_edge;
+      volatile unsigned long falling_edge;
+};
+typedef struct interrupt_timer interruptTimer;
 
 #endif

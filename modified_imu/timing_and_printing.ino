@@ -1,5 +1,9 @@
 #include "configs.h"
 
+float watchdog_timeout=200.0;//ms
+float watchdog=0.0;
+
+
 
 void regulate_time(unsigned long startTime){  
 
@@ -10,7 +14,19 @@ void regulate_time(unsigned long startTime){
   const int slow_loop= 0;//ms additional delay
   delay(slow_loop);
 
+  if (throttle_isr_flag){
+    throttle_isr_flag=false;
+    watchdog= millis();
+  }
 
+  if (millis()-watchdog >watchdog_timeout){
+    Serial.println("Controller Timeout!");
+    if(ENABLE_WATCHDOG) {
+      desired.throttle=motor_min; 
+      send_all_to_motors(motor_min)
+      flight_mode=idle;
+    }
+  }
   
   epoch = epoch +1;
   //Each loop should be  20ms. (ideally)
@@ -123,7 +139,12 @@ void print_eyaw(void){
 
 
 
-
+void print_throttle_in(){
+      Serial.print("high_time_uS: ");Serial.print(throttle_in.high_time);Serial.print("\t\t");
+      Serial.print("low_time_uS: ");Serial.print(throttle_in.low_time);Serial.print("\t\t");
+      Serial.print("rising_edge_uS: ");Serial.print(throttle_in.rising_edge);Serial.print("\t\t");
+      Serial.print("falling_edge_uS: ");Serial.println(throttle_in.falling_edge);
+}
 
 
 

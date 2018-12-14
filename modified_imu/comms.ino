@@ -122,7 +122,7 @@ void get_desired_raw(void){
       case '+'://throttle up
         desired_raw.throttle=diff;        
         break;
-      case '5':default:
+      case '5':
         //get_idle_desired();
       break;
 
@@ -157,12 +157,22 @@ void get_desired_raw(void){
       }    
     break;
 
+    default:
+      if (flight_mode==idle){
+        flight_mode=general_debug;        
+        Serial.println("Entering debug test Mode");      
+      }
+    break;
+
     case 'f'://fly
-      if (flight_mode==orientation_mode||flight_mode==hover){
+      if (flight_mode==orientation_mode){
         flight_mode=flight;   
         Serial.println("Entering flight Mode");     
       }    
     break;
+
+
+    
     
     case 'p'://fly
       Serial.print("Adjusting p:");    
@@ -177,6 +187,7 @@ void get_desired_raw(void){
       //print_PidConstants(kroll);  
       //print_PidConstants(kpitch);
     break;
+    
     case 'i'://fly
       Serial.print("Adjusting i:");     
       delay(100);
@@ -190,6 +201,7 @@ void get_desired_raw(void){
       //print_PidConstants(kroll); 
       //print_PidConstants(kpitch); 
     break;
+    
     case 'd'://fly
       Serial.print("Adjusting p:");   
       delay(100);
@@ -206,99 +218,6 @@ void get_desired_raw(void){
 
 
 
-    
-
-    /*
-    case 'O'://orientation_mode
-      if (flight_mode==idle){
-        flight_mode=test_orientation_mode;     
-        Serial.println("Entering orientation_mode Mode");
-      }    
-    break;
-    
-    
-    
-    
-    case 'C'://calibration
-      if (flight_mode==idle){
-        flight_mode=idle;  
-        Serial.println("Entering Calibration Mode"); 
-        //high_calibration();
-             
-      }   
-    break;
-
-    case 't':
-      if (flight_mode==idle){
-        flight_mode=throttle_test;  
-        Serial.println("Entering throttle test Mode");      
-      }    
-    break;
-    
-
-
-    case 'q':
-      if (flight_mode==idle){
-        flight_mode=transform_test;  
-        Serial.println("Entering transform test Mode");      
-      }    
-    break;
-    
-    case 's':
-      if (flight_mode==idle){
-        flight_mode=sensor_test;  
-        Serial.println("Entering sensor test Mode");      
-      }    
-    break;
-
-    case 'r':
-      if (flight_mode==idle){
-        flight_mode=error_roll_test;  
-        Serial.println("Entering error roll test Mode");      
-      }    
-    break;
-
-    case 'p':
-      if (flight_mode==idle){
-        flight_mode=error_pitch_test; 
-        Serial.println("Entering error pitch test Mode");      
-      }    
-    break;
-    case 'y':
-      if (flight_mode==idle){
-        flight_mode=error_yaw_test;  
-        Serial.println("Entering error yaw test Mode");      
-      }    
-    break;
-    case 'g':
-      if (flight_mode==idle){
-        flight_mode=general_test;  
-        Serial.println("Entering General test Mode");      
-      }    
-      
-      
-      pwm_t();on=not on;
-    break;
-
-    case 'd':
-      if (flight_mode==idle){
-        flight_mode=desired_test;  
-        Serial.println("Entering desired test Mode");      
-      }    
-    break;
-
-
-
-
-*/
-
-/*
-    case 'h'://hover
-      if (flight_mode==hover){//TODO
-        flight_mode=hover;   
-        Serial.println("Entering hover Mode");     
-      }    
-    break;*/
       
 
     }
@@ -316,7 +235,13 @@ void get_flight_desired(void){
   else if(desired.yaw<0.0)desired.yaw+=360;    
 
   
-  desired.throttle=desired.throttle+desired_raw.throttle;//capped later, leave raw for now
+  if ( ENABLE_RC_RECIEVER ==true){
+    desired.throttle=map(throttle_in,1000,2000,motor_min,motor_max);
+  
+  }
+  else{ 
+    desired.throttle=desired.throttle+desired_raw.throttle;//capped later, leave raw for now
+  }
   
   
 }

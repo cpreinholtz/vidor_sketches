@@ -7,20 +7,14 @@
 //control mode constants
 #define idle 1
 #define orientation_mode 2
-#define sensor_test 4
-#define flight 8
+#define flight 4
+
+#define general_debug 8
 #define esc_calibration 16
-#define throttle_test 32
-#define sensor_test 64
-#define error_roll_test 128
-#define desired_test 256
-#define error_pitch_test 512
-#define error_yaw_test 1024
-#define motor_direct 2048
-#define test_orientation_mode 5096
-#define general_test 5097
-#define transform_test 5098
-#define hover 0 //unsupported right now
+#define motor_direct 32
+
+
+
 
 
 //motors
@@ -43,7 +37,10 @@
 #define ENABLE_WIFI false
 #define ENABLE_IMU true
 #define ENABLE_PWM true
+#define ENABLE_WATCHDOG true
+#define ENABLE_RC_RECIEVER true
 #define UPSIDEDOWN false
+
 #define ENABLE_BMP false
 
 //#define ENABLE_DEBUG_OUTPUT true //adafruit
@@ -69,6 +66,9 @@ extern Throttle throttle;
 extern PidError eroll, epitch, eyaw, eheight;
 extern PidConstants kroll,kpitch,kyaw, kheight;
 extern Fcart acc_pos, gyro_rate, gyro_pos, cfilter; 
+extern volatile  interruptTimer throttle_in;
+
+extern bool motor_arm;
 
 
 //Dont Touch

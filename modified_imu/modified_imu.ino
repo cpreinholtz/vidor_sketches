@@ -17,10 +17,10 @@
 
 
 //pre flight checklist
-bool oriented=false;
-bool liftoff=false;
+//bool oriented=false;
+//bool liftoff=false;
 int flight_mode=idle;
-
+bool motor_arm=false;
 
 //int command_mode=idle;
 int epoch=0;
@@ -50,94 +50,81 @@ bool on=false;
 
 void dostuff(void){
   switch(flight_mode){
-    
+
+////////////////////////////////////////////
 //Deliverable modes    
     case idle:
-      //no measured  
+      motor_arm=false;
       desired.throttle=motor_min;     
-      idle_control();      
-    break;
-        
+      set_all_motors(motor_min);    
+    break;   
+     
+    case orientation_mode: 
+      motor_arm=false;
+      set_all_motors(motor_min);       
+      desired.throttle=(motor_min);
+      calc_offsets(); 
+      print_offset(); 
+    break;    
+    
+    case flight:
+      motor_arm=true;
+      flight_control();
+      //print_x();
+    break;  
+    
+////////////////////////////////////
+
     case esc_calibration:
+      motor_arm=true;
       calibrate_esc();
       flight_mode=idle;  
-    break;
-        
-    case orientation_mode: 
-      idle_control();  
-      calc_offsets(); 
-      desired.throttle=(motor_min);
-      print_offset(); 
-    break;
-
-    case flight:
-      flight_control();
-      print_x();
-    break;
-
+    break;   
+     
+    case motor_direct:
+      motor_arm=true;
+      set_all_motors(desired.throttle);      
+      print_desired();
+    break;    
 
 //////////////////////////////
 //tests
-    case test_orientation_mode: 
-      idle_control(); 
-      desired.throttle=motor_min; 
-      calc_offsets(); 
-      //desired.throttle=(motor_min);
-      print_offset(); 
-    break;
     
-    case transform_test: 
-      get_measured();  
-      print_measured(); 
-    break;
-    
-    case sensor_test:
-      flight_control();
-      print_measured();
-    break;
-    
-    case desired_test:
-      flight_control();
-      print_desired();
-      //print_desired_raw();
-    break;
-    
-    case error_roll_test:
-      flight_control();
-      print_eroll();
-    break;
-    
-    case error_pitch_test:
-      flight_control();
-      print_epitch();
-    break;
-    
-    case error_yaw_test:
-      flight_control();
-      print_eyaw();
-    break;
-    
-    case motor_direct:
-      set_all_motors(desired.throttle);      
-      print_desired();
-    break;
-    
-    case throttle_test:
-      flight_control();
-      print_throttle();
-    break;
-    
-    case general_test:
-      get_measured();
-      print_z();
-
-    
+    case general_debug:
+      motor_arm=false;
+      flight_control();      
+      switch(command){
+        //already used characters: pid kof mc
+        //used here: xyz tT ds
+        
+        case'x':
+          print_eroll(); break;          
+        case'y':
+          print_epitch(); break;
+        case'z':
+          print_eyaw(); break;
+          
+        case't':
+          print_throttle(); break;
+        case'T':
+          print_throttle_in(); break;
+          
+        case 'd':
+          print_desired();break;
+        case 's':
+          print_measured();break;
+          
+        
+        default:
+          Serial.println("Unrecogniosed command"); break;
+      }    
     break;
 
 //////////////////////////////
 
  
     default:
+      motor_arm=false;
       Serial.println("unsuporrted FLIGHT_MODE");
       flight_mode=idle;
     break;
@@ -160,9 +147,10 @@ void setup() {
   
   setup_wifi();
   setup_imu();
-  setup_bmp();
+  //setup_bmp();
   setup_pid();
   setup_motors();
+  interrupt_setup();
 
   
 

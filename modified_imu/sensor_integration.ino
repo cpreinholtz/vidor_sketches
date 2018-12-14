@@ -67,7 +67,7 @@ void calc_offsets(void){
   desired.roll=offset.roll;
   desired.pitch=offset.pitch;
   desired.yaw=offset.yaw;
-  idle_control(); 
+   
 
   
 }

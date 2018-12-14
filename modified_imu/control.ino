@@ -15,9 +15,6 @@ PidConstants kroll,kpitch,kyaw, kheight;
 /////////////////////////////////////////////////
 //ALL (THE BIG HITTERS)
 
-void idle_control(void){
-    set_all_motors(motor_min);   
-}
 
 void throttle_control(void){
     set_all_motors(motor_min);  //TODO 
