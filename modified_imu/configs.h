@@ -13,7 +13,8 @@
 
 
 //motors
-#define motor_min 680//#define motor_start 821 
+#define motor_min 680//
+#define motor_start 821
 #define motor_max 1400
 
 

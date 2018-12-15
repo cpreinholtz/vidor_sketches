@@ -61,8 +61,9 @@ void dostuff(void){
      
     case orientation_mode: 
       motor_arm=false;
+      flight_control();
       set_all_motors(motor_min);       
-      desired.throttle=(motor_min);
+
       calc_offsets(); 
       print_offset(); 
     break;    

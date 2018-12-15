@@ -33,40 +33,40 @@ void regulate_time(void){
 
 
 void handle_intrupt_flags(void){
+  
   if (throttle_isr_flag){
     throttle_isr_flag=false;
     controller_connected=true;
     watchdog= millis();
   }
   
+  static float aux_in_avg =0.0;
   if (aux_isr_flag){
-
     if (aux_statechange_enable=true){
-      aux_isr_flag=false;
+      aux_isr_flag=false;      
+      aux_in_avg= aux_in_avg*0.8+ float(aux_in.high_time)*0.2;
+
       
-      if ( aux_in.high_time<aux_in_idle){
+      if ( aux_in_avg<aux_in_idle){
         if (  flight_mode == flight || flight_mode == orientation_mode){
           flight_mode=idle; 
-          Serial.print(aux_in.high_time);Serial.println(" Aux to idle!");   
+          Serial.print(aux_in_avg); Serial.println(" Aux to idle!");   
         }  
       }
-      else if (aux_in.high_time < aux_in_orientation && aux_in.high_time>=aux_in_idle){
+      else if (aux_in_avg < aux_in_orientation && aux_in_avg>=aux_in_idle){
         if(flight_mode == idle ) {
           flight_mode=orientation_mode; 
-          Serial.print(aux_in.high_time);Serial.println(" Aux to orientation!");
+          Serial.print(aux_in_avg); Serial.println(" Aux to orientation!");
         }
       }
-      else if (  aux_in.high_time >= aux_in_orientation){
-        if (flight_mode == orientation_mode) {
+      else if ( aux_in_avg >= aux_in_orientation){
+        if (flight_mode == orientation_mode && desired.throttle<motor_start) {
           flight_mode=flight;       
-          Serial.print(aux_in.high_time);
-          Serial.println(" Aux to flight!");
+          Serial.print(aux_in_avg); Serial.println(" Aux to flight!");
         }
       }
-    }
-    
-  }
-  
+    }    
+  }  
 }
 
 void poll_till_timeout(void){
@@ -99,7 +99,7 @@ void watchdog_timer(void){
 void blink_mode(void){
   //LED Blinking
   if (flight_mode==idle) digitalWrite(LED_BUILTIN, HIGH);
-  else if (flight_mode==orientation_mode ) epoch_blink(8);  
+  else if (flight_mode==orientation_mode ) epoch_blink(4);  
   else if (flight_mode==flight) digitalWrite(LED_BUILTIN, LOW);
   else epoch_blink(100);  
 }
