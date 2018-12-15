@@ -25,21 +25,21 @@ bool motor_arm=false;
 //int command_mode=idle;
 int epoch=0;
 char command='k';
-
+unsigned long start_loop ;
 
 ///////////////////////////////////////////////////////////////////////////////
 void loop() {
 
-  unsigned long start_loop ;
+  
 
   while(1){
-    start_loop = millis(); 
+    start_loop = millis();
           
-    dostuff();
-    get_command();//this covers desired
+    dostuff();//this covers_controller_desired
+    get_command();//this covers desired_serial
     
 
-    regulate_time(start_loop);  
+    regulate_time();  
 
     
   }//while (1)
@@ -108,8 +108,10 @@ void dostuff(void){
           print_throttle(); break;
         case'T':
           print_throttle_in(); break;
+        case'a':
+          print_aux_in(); break;
           
-        case 'd':
+        case 'D':
           print_desired();break;
         case 's':
           print_measured();break;

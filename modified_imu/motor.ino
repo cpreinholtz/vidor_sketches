@@ -1,6 +1,14 @@
 #include <Adafruit_PWMServoDriver.h>
 #include "configs.h"
 
+#define pwm_frequency 1600
+
+#define FL  8
+#define FR  9
+#define BL  10
+#define BR  11
+
+
 void send_throttle_to_motors(void){
     if(flight_mode==flight&& motor_arm==true){
       if (ENABLE_PWM){

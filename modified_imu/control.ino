@@ -21,12 +21,14 @@ void throttle_control(void){
 }
 
 
-void flight_control(void){
+void flight_control(void){  
   get_measured();
+  get_flight_desired();
   get_all_errors();
   get_all_pid();
   apply_all_errors();
-  send_throttle_to_motors();    
+  send_throttle_to_motors();
+     
 }
 
 void get_all_pid(void){

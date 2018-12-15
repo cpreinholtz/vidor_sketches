@@ -1,44 +1,27 @@
 #include "configs.h"
 
-float watchdog_timeout=200.0;//ms
+
+
+
+const float watchdog_timeout=80.0;//ms
+
 float watchdog=0.0;
+bool controller_connected=false;
+bool throttle_isr_flag=false, aux_isr_flag=false;
+bool aux_statechange_enable = true;
 
 
-
-void regulate_time(unsigned long startTime){  
-
+////////////////////////////////////////////////////////////
+void regulate_time(void){  
   
-  //DUMMY ITEMS  
-  if (epoch%20==0) digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level);
-  else digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-  const int slow_loop= 0;//ms additional delay
-  delay(slow_loop);
-
-  if (throttle_isr_flag){
-    throttle_isr_flag=false;
-    watchdog= millis();
-  }
-
-  if (millis()-watchdog >watchdog_timeout){
-    Serial.println("Controller Timeout!");
-    if(ENABLE_WATCHDOG) {
-      desired.throttle=motor_min; 
-      send_all_to_motors(motor_min)
-      flight_mode=idle;
-    }
-  }
+  blink_mode();
   
-  epoch = epoch +1;
-  //Each loop should be  20ms. (ideally)
-  if(millis() - startTime > (LOOP_PERIOD*1000) ){
-    Serial.print("TOO SLOW!!!!: loop time (ms)= ");
-    Serial.println(millis() - startTime);
-  }
+  handle_intrupt_flags();
   
-  while(millis() - startTime < (LOOP_PERIOD*1000))
-  {
-    delayMicroseconds(1);
-  }
+  watchdog_timer();
+
+  poll_till_timeout();
+
       
 }
 
@@ -46,6 +29,89 @@ void regulate_time(unsigned long startTime){
 
 
 
+
+
+
+void handle_intrupt_flags(void){
+  if (throttle_isr_flag){
+    throttle_isr_flag=false;
+    controller_connected=true;
+    watchdog= millis();
+  }
+  
+  if (aux_isr_flag){
+
+    if (aux_statechange_enable=true){
+      aux_isr_flag=false;
+      
+      if ( aux_in.high_time<aux_in_idle){
+        if (  flight_mode == flight || flight_mode == orientation_mode){
+          flight_mode=idle; 
+          Serial.print(aux_in.high_time);Serial.println(" Aux to idle!");   
+        }  
+      }
+      else if (aux_in.high_time < aux_in_orientation && aux_in.high_time>=aux_in_idle){
+        if(flight_mode == idle ) {
+          flight_mode=orientation_mode; 
+          Serial.print(aux_in.high_time);Serial.println(" Aux to orientation!");
+        }
+      }
+      else if (  aux_in.high_time >= aux_in_orientation){
+        if (flight_mode == orientation_mode) {
+          flight_mode=flight;       
+          Serial.print(aux_in.high_time);
+          Serial.println(" Aux to flight!");
+        }
+      }
+    }
+    
+  }
+  
+}
+
+void poll_till_timeout(void){
+  //Regulate Time
+  epoch = epoch +1;
+  //Each loop should be  20ms. (ideally)
+  if(millis() - start_loop > (LOOP_PERIOD*1000) ){
+    Serial.print("TOO SLOW!!!!: loop time (ms)= ");
+    Serial.println(millis() - start_loop);
+  }  
+  while(millis() - start_loop < (LOOP_PERIOD*1000))    delayMicroseconds(1);
+}
+
+void watchdog_timer(void){
+  //WATCHDOG FOR CONTROLLER
+  if (controller_connected==true && millis()-watchdog >watchdog_timeout){
+    controller_connected=false;
+    Serial.println("Controller Timeout! Switching to keyboard only control");
+    if(ENABLE_WATCHDOG) {
+      desired.throttle=motor_min; 
+      set_all_motors(motor_min);
+      flight_mode=idle;
+    }
+  }
+}
+
+
+
+
+void blink_mode(void){
+  //LED Blinking
+  if (flight_mode==idle) digitalWrite(LED_BUILTIN, HIGH);
+  else if (flight_mode==orientation_mode ) epoch_blink(8);  
+  else if (flight_mode==flight) digitalWrite(LED_BUILTIN, LOW);
+  else epoch_blink(100);  
+}
+
+
+void epoch_blink(int rate){
+  static bool on=false;
+  if (epoch%rate==0) {
+    if (on) {digitalWrite(LED_BUILTIN, HIGH); on=!on; }
+    else {digitalWrite(LED_BUILTIN, LOW); on=!on; }
+  }
+}
 
 
 ///////////////////////////////////////////////////
@@ -146,6 +212,12 @@ void print_throttle_in(){
       Serial.print("falling_edge_uS: ");Serial.println(throttle_in.falling_edge);
 }
 
+void print_aux_in(){
+      Serial.print("high_time_uS: ");Serial.print(aux_in.high_time);Serial.print("\t\t");
+      Serial.print("low_time_uS: ");Serial.print(aux_in.low_time);Serial.print("\t\t");
+      Serial.print("rising_edge_uS: ");Serial.print(aux_in.rising_edge);Serial.print("\t\t");
+      Serial.print("falling_edge_uS: ");Serial.println(aux_in.falling_edge);
+}
 
 
 

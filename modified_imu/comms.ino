@@ -2,6 +2,9 @@
 #include <WiFiNINA.h>
 #include "secrets.h"
 
+
+#include "configs.h"
+WiFiClient client;
 /*
 //Add YOUR Network configs in "secrets.h":
 #define SECRET_SSID "netwrk"
@@ -9,35 +12,42 @@
 #define SECRET_PORT 1234
 #define SECRET_SERVER_IP "ip"
  */
-#include "configs.h"
 
 
-WiFiClient client;
-int status = WL_IDLE_STATUS;
-
-char ssid[]=SECRET_SSID;
-char pass[]=SECRET_PASS;
-unsigned int localPort = SECRET_PORT;      // local port to listen on
-char servername[]=SECRET_SERVER_IP;  // remote server we will connect to
 
 
-char start='{';
-char last='}';
-char comma=',';
 
-char* id[]={
-  "\"ms\":", //time
-  "\"te\":", //telem
-  "\"cx\":", //measured x
-  "\"cy\":", //measured y
-  "\"cz\":", //measured x
-  "\"dx\":", //desired x
-  "\"dy\":", //desired y
-  "\"dz\":", //desired z
-  "\"dt\":", //desired throttle
-};
+void get_flight_desired(void){
+
+  desired.roll=desired_raw.roll+offset.roll;  
+  desired.pitch=desired_raw.pitch+offset.pitch;
+  
+  desired.yaw=desired.yaw+desired_raw.yaw;//offset already applied in yaw
+  if (desired.yaw>360.0)desired.yaw-=360;
+  else if(desired.yaw<0.0)desired.yaw+=360;    
+
+  
+  if ( ENABLE_RC_RECIEVER ==true and controller_connected==true){
+    desired.throttle=map(throttle_in.high_time,  throttle_in_min, throttle_in_max,  motor_min, motor_max);  
+   
+  }
+  else{
+    desired.throttle=desired.throttle+desired_raw.throttle;//capped later, leave raw for now
+  }
+  
+  
+}
 
 
+
+
+
+
+
+
+
+////////////////////////////////////////////
+//SERIAL
 ///////////////////////////////////////////////////////
 //WIFI
 void get_command(void){
@@ -53,7 +63,7 @@ void get_command(void){
       Serial.println("");
       client.flush();
       
-      get_desired();
+      get_desired_serial();
       //get_numeric_command();
     }
   }
@@ -66,7 +76,7 @@ void get_command(void){
       Serial.print(epoch);
       Serial.println("");
 
-      get_desired();
+      get_desired_serial();
       //get_numeric_command();
     }
   }  
@@ -75,18 +85,7 @@ void get_command(void){
 }
 
 
-
-void get_desired(void){
-  get_desired_raw();
-  get_flight_desired();
-  //if (flight_mode==flight)get_flight_desired();
-  //else if (flight_mode!=flight)get_idle_desired();
-     
-  
-}
-
-
-void get_desired_raw(void){
+static void get_desired_serial(void){
   desired_raw.roll=0.0;
   desired_raw.pitch=0.0;
   desired_raw.yaw=0.0;
@@ -131,6 +130,7 @@ void get_desired_raw(void){
       flight_mode=idle;
       desired.throttle=motor_min;      
       Serial.println("Entering IDLE Mode");
+      aux_statechange_enable=false;
     break;
     case 'c'://calibration
       if (flight_mode==idle){
@@ -147,6 +147,7 @@ void get_desired_raw(void){
       if (flight_mode==idle){
         flight_mode=orientation_mode;     
         Serial.println("Entering orientation_mode Mode");
+        aux_statechange_enable=true;
       }    
     break;
 
@@ -157,12 +158,6 @@ void get_desired_raw(void){
       }    
     break;
 
-    default:
-      if (flight_mode==idle){
-        flight_mode=general_debug;        
-        Serial.println("Entering debug test Mode");      
-      }
-    break;
 
     case 'f'://fly
       if (flight_mode==orientation_mode){
@@ -203,7 +198,7 @@ void get_desired_raw(void){
     break;
     
     case 'd'://fly
-      Serial.print("Adjusting p:");   
+      Serial.print("Adjusting d:");   
       delay(100);
       infloat="";
       while (Serial.available()>0){
@@ -217,82 +212,18 @@ void get_desired_raw(void){
     break;
 
 
+    default:
+      if (flight_mode==idle){
+        flight_mode=general_debug;        
+        Serial.println("Entering debug test Mode");  
+        aux_statechange_enable=false;    
+      }
+    break;
 
       
 
     }
 }
-
-
-
-void get_flight_desired(void){
-
-  desired.roll=desired_raw.roll+offset.roll;  
-  desired.pitch=desired_raw.pitch+offset.pitch;
-  
-  desired.yaw=desired.yaw+desired_raw.yaw;//offset already applied in yaw
-  if (desired.yaw>360.0)desired.yaw-=360;
-  else if(desired.yaw<0.0)desired.yaw+=360;    
-
-  
-  if ( ENABLE_RC_RECIEVER ==true){
-    desired.throttle=map(throttle_in,1000,2000,motor_min,motor_max);
-  
-  }
-  else{ 
-    desired.throttle=desired.throttle+desired_raw.throttle;//capped later, leave raw for now
-  }
-  
-  
-}
-
-
-
-
-
-void send_telem(float ms){
-  if(ENABLE_WIFI){
-    String str ="";
-    
-    str.concat(start);  
-    str.concat(id[0]);
-    str.concat(ms);
-    str.concat(last);  
-    //client.println(str);
-    //Serial.println(str);
-  
-    
-    if (((float)epoch*LOOP_PERIOD)>=0.5){
-      kill_client();
-      while(1);
-    }
-  }
-  
-}
-
-void kill_client(void){
-  Serial.println("Killing Client");
-  client.stop();
-}
-
-
-
-
-////////////////////////////////////////////
-//SERIAL
-
-
-
-
-
-
-
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -302,7 +233,33 @@ void kill_client(void){
 
 
 /////////////////////////////////////////////////////////////////////////////////
-//WIFI SETUP
+//WIFI
+
+
+int status = WL_IDLE_STATUS;
+
+char ssid[]=SECRET_SSID;
+char pass[]=SECRET_PASS;
+unsigned int localPort = SECRET_PORT;      // local port to listen on
+char servername[]=SECRET_SERVER_IP;  // remote server we will connect to
+
+
+char start='{';
+char last='}';
+char comma=',';
+
+char* id[]={
+  "\"ms\":", //time
+  "\"te\":", //telem
+  "\"cx\":", //measured x
+  "\"cy\":", //measured y
+  "\"cz\":", //measured x
+  "\"dx\":", //desired x
+  "\"dy\":", //desired y
+  "\"dz\":", //desired z
+  "\"dt\":", //desired throttle
+};
+
 void say_hello(void) {
   if(ENABLE_WIFI){
     
@@ -387,4 +344,31 @@ void setup_wifi(void) {
     say_hello();
       
   }
+}
+
+
+void kill_client(void){
+  Serial.println("Killing Client");
+  client.stop();
+}
+
+
+void send_telem(float ms){
+  if(ENABLE_WIFI){
+    String str ="";
+    
+    str.concat(start);  
+    str.concat(id[0]);
+    str.concat(ms);
+    str.concat(last);  
+    //client.println(str);
+    //Serial.println(str);
+  
+    
+    if (((float)epoch*LOOP_PERIOD)>=0.5){
+      kill_client();
+      while(1);
+    }
+  }
+  
 }
