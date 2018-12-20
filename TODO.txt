@@ -1,4 +1,12 @@
 # TODO List:
+      consider fixedpoint math?  probably not necisary unless we start doing way more math ie. kalman filter, quaternion?
+
+
+
+
+
+
+
 General:
 
 //checkout these functions:
