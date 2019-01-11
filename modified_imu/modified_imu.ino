@@ -17,29 +17,29 @@
 
 
 //pre flight checklist
-bool oriented=false;
-bool liftoff=false;
+//bool oriented=false;
+//bool liftoff=false;
 int flight_mode=idle;
-
+bool motor_arm=false;
 
 //int command_mode=idle;
 int epoch=0;
 char command='k';
-
+unsigned long start_loop ;
 
 ///////////////////////////////////////////////////////////////////////////////
 void loop() {
 
-  unsigned long start_loop ;
+  
 
   while(1){
-    start_loop = millis(); 
+    start_loop = millis();
           
-    dostuff();
-    get_command();//this covers desired
+    dostuff();//this covers_controller_desired
+    get_command();//this covers desired_serial
     
 
-    regulate_time(start_loop);  
+    regulate_time();  
 
     
   }//while (1)
@@ -50,92 +50,92 @@ bool on=false;
 
 void dostuff(void){
   switch(flight_mode){
-    
+
+////////////////////////////////////////////
 //Deliverable modes    
     case idle:
-      //no measured      
-      idle_control();      
-    break;
-        
+      motor_arm=false;
+      desired.throttle=motor_min;     
+      set_all_motors(motor_min);    
+    break;   
+     
+    case orientation_mode: 
+      motor_arm=false;
+      flight_control();
+      set_all_motors(motor_min);       
+
+      calc_offsets(); 
+      print_offset(); 
+    break;    
+    
+    case flight:
+      motor_arm=true;
+      flight_control();
+      print_measured();
+    break;  
+    
+////////////////////////////////////
+
     case esc_calibration:
+      motor_arm=true;
       calibrate_esc();
       flight_mode=idle;  
-    break;
-        
-    case orientation_mode: 
-      idle_control();  
-      calc_offsets(); 
-      desired.throttle=(motor_min);
-      print_offset(); 
-    break;
-
-    case flight:
-      flight_control();
-      print_x();
-    break;
-
+    break;   
+     
+    case motor_direct:
+      motor_arm=true;
+      set_all_motors(desired.throttle);      
+      print_desired();
+    break;    
 
 //////////////////////////////
 //tests
-    case test_orientation_mode: 
-      idle_control();  
-      calc_offsets(); 
-      //desired.throttle=(motor_min);
-      print_offset(); 
-    break;
     
-    case transform_test: 
-      get_measured();  
-      print_measured(); 
-    break;
-    
-    case sensor_test:
-      flight_control();
-      print_measured();
-    break;
-    
-    case desired_test:
-      flight_control();
-      print_desired();
-      //print_desired_raw();
-    break;
-    
-    case error_roll_test:
-      flight_control();
-      print_eroll();
-    break;
-    
-    case error_pitch_test:
-      flight_control();
-      print_epitch();
-    break;
-    
-    case error_yaw_test:
-      flight_control();
-      print_eyaw();
-    break;
-    
-    case motor_direct:
-      set_all_motors(desired.throttle);      
-      print_desired();
-    break;
-    
-    case throttle_test:
-      flight_control();
-      print_throttle();
-    break;
-    
-    case general_test:
-      get_measured();
-      print_z();
+    case general_debug:
+      motor_arm=false;
+      flight_control();      
+      switch(command){
+        //already used characters: //PID //kKof //mc
 
-    
+        
+        case'X':
+          print_eroll(); break;          
+        case'Y':
+          print_epitch(); break;
+        case'Z':
+          print_eyaw(); break;
+          
+        case'T':
+          print_throttle(); break;
+          
+        case't':
+          print_throttle_in(); break;
+        case'a':
+          print_aux_in(); break;
+        case'r':
+          print_roll_in(); break;
+        case'p':
+          print_pitch_in(); break;
+        case'y':
+          print_yaw_in(); break;
+          
+          
+        case 'd':
+          print_desired();break;
+        case 's':
+          print_measured();break;
+          
+        
+        default:
+          Serial.println("Unrecogniosed command"); break;
+      }    
     break;
 
 //////////////////////////////
 
  
     default:
+      motor_arm=false;
       Serial.println("unsuporrted FLIGHT_MODE");
       flight_mode=idle;
     break;
@@ -158,19 +158,13 @@ void setup() {
   
   setup_wifi();
   setup_imu();
-  setup_bmp();
+  //setup_bmp();
   setup_pid();
   setup_motors();
+  interrupt_setup();
 
   
 
  
   
 }
-
-
-
-
-
-
-

@@ -1,36 +1,56 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include "secrets.h"
+
+
 #include "configs.h"
-
-
 WiFiClient client;
-int status = WL_IDLE_STATUS;
-
-char ssid[]=SECRET_SSID;
-char pass[]=SECRET_PASS;
-unsigned int localPort = SECRET_PORT;      // local port to listen on
-char servername[]=SECRET_SERVER_IP;  // remote server we will connect to
-
-
-
-char start='{';
-char last='}';
-char comma=',';
-
-char* id[]={
-  "\"ms\":", //time
-  "\"te\":", //telem
-  "\"cx\":", //measured x
-  "\"cy\":", //measured y
-  "\"cz\":", //measured x
-  "\"dx\":", //desired x
-  "\"dy\":", //desired y
-  "\"dz\":", //desired z
-  "\"dt\":", //desired throttle
-};
+/*
+//Add YOUR Network configs in "secrets.h":
+#define SECRET_SSID "netwrk"
+#define SECRET_PASS "pass"
+#define SECRET_PORT 1234
+#define SECRET_SERVER_IP "ip"
+ */
 
 
+
+
+
+void get_flight_desired(void){
+
+  //probably time to rethink yaw... new controller
+  desired.yaw=desired.yaw+desired_raw.yaw;//offset already applied in yaw
+  if (desired.yaw>360.0)desired.yaw-=360;
+  else if(desired.yaw<0.0)desired.yaw+=360;    
+
+  
+  if ( ENABLE_RC_RECIEVER ==true and controller_connected==true){
+    //desired.throttle=map(throttle_in.high_time,  throttle_in_min, throttle_in_max,  motor_min, motor_max);
+    desired.throttle=map(throttle_in.high_time,  mid_stick.throttle, throttle_in_max,  motor_min, motor_max);
+    desired.roll=float(map(roll_in.high_time,  mid_stick.roll-stick_travel, mid_stick.roll+stick_travel,  craft_angle_min, craft_angle_max))+offset.roll;
+    desired.pitch=float(map(pitch_in.high_time,  mid_stick.pitch-stick_travel, mid_stick.pitch+stick_travel,  craft_angle_min, craft_angle_max))+offset.pitch;
+    
+  }
+  else{
+    desired.throttle=desired.throttle+desired_raw.throttle;//capped later, leave raw for now  
+    desired.roll=desired_raw.roll+offset.roll;  
+    desired.pitch=desired_raw.pitch+offset.pitch;
+  }
+  
+  
+}
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////
+//SERIAL
 ///////////////////////////////////////////////////////
 //WIFI
 void get_command(void){
@@ -46,7 +66,7 @@ void get_command(void){
       Serial.println("");
       client.flush();
       
-      get_desired();
+      get_desired_serial();
       //get_numeric_command();
     }
   }
@@ -59,7 +79,7 @@ void get_command(void){
       Serial.print(epoch);
       Serial.println("");
 
-      get_desired();
+      get_desired_serial();
       //get_numeric_command();
     }
   }  
@@ -68,23 +88,13 @@ void get_command(void){
 }
 
 
-
-void get_desired(void){
-  get_desired_raw();
-  get_flight_desired();
-  //if (flight_mode==flight)get_flight_desired();
-  //else if (flight_mode!=flight)get_idle_desired();
-     
-  
-}
-
-
-void get_desired_raw(void){
+static void get_desired_serial(void){
   desired_raw.roll=0.0;
   desired_raw.pitch=0.0;
   desired_raw.yaw=0.0;
   desired_raw.yaw=0.0;
   desired_raw.throttle=0.0;
+   String infloat="";
   
   float diff=5.0;
 //  flaot tdiff=
@@ -114,9 +124,32 @@ void get_desired_raw(void){
       case '+'://throttle up
         desired_raw.throttle=diff;        
         break;
-      case '5':default:
+      case '5':
         //get_idle_desired();
       break;
+
+    case '0': case'k'://kill / idle
+      set_all_motors(motor_min);
+      flight_mode=idle;
+      desired.throttle=motor_min;      
+      Serial.println("Entering IDLE Mode, state chage disabled without K");
+      aux_statechange_enable=false;
+    break;
+    case 'K':
+      set_all_motors(motor_min);
+      flight_mode=idle;
+      desired.throttle=motor_min; 
+      if (aux_in.high_time<aux_in_idle && controller_connected){
+        aux_statechange_enable=true;     
+        Serial.println("Allowing aux state change enable");
+      }
+    break;
+    case 'c'://calibration
+      if (flight_mode==idle){
+        flight_mode=esc_calibration;  
+        Serial.println("Entering Calibration Mode");      
+      }   
+    break;
 
 
 
@@ -126,44 +159,10 @@ void get_desired_raw(void){
       if (flight_mode==idle){
         flight_mode=orientation_mode;     
         Serial.println("Entering orientation_mode Mode");
+        //aux_statechange_enable=true;
       }    
-    break;
-    case 'O'://orientation_mode
-      if (flight_mode==idle){
-        flight_mode=test_orientation_mode;     
-        Serial.println("Entering orientation_mode Mode");
-      }    
-    break;
-    
-    case 'k'://kill / idle
-      set_all_motors(motor_min);
-      flight_mode=idle;
-      desired.throttle=motor_min;      
-      Serial.println("Entering IDLE Mode");
-    break;
-    
-    case 'c'://calibration
-      if (flight_mode==idle){
-        flight_mode=esc_calibration;  
-        Serial.println("Entering Calibration Mode");      
-      }   
-    break;
-    case 'C'://calibration
-      if (flight_mode==idle){
-        flight_mode=idle;  
-        Serial.println("Entering Calibration Mode"); 
-        //high_calibration();
-             
-      }   
     break;
 
-    case 't':
-      if (flight_mode==idle){
-        flight_mode=throttle_test;  
-        Serial.println("Entering throttle test Mode");      
-      }    
-    break;
-    
     case 'm'://diect throttle (no PID corrections)
       if (flight_mode==idle){
         flight_mode=motor_direct;  
@@ -171,139 +170,72 @@ void get_desired_raw(void){
       }    
     break;
 
-    case 'q':
-      if (flight_mode==idle){
-        flight_mode=transform_test;  
-        Serial.println("Entering transform test Mode");      
-      }    
-    break;
-    
-    case 's':
-      if (flight_mode==idle){
-        flight_mode=sensor_test;  
-        Serial.println("Entering sensor test Mode");      
-      }    
-    break;
-
-    case 'r':
-      if (flight_mode==idle){
-        flight_mode=error_roll_test;  
-        Serial.println("Entering error roll test Mode");      
-      }    
-    break;
-
-    case 'p':
-      if (flight_mode==idle){
-        flight_mode=error_pitch_test; 
-        Serial.println("Entering error pitch test Mode");      
-      }    
-    break;
-    case 'y':
-      if (flight_mode==idle){
-        flight_mode=error_yaw_test;  
-        Serial.println("Entering error yaw test Mode");      
-      }    
-    break;
-    case 'g':
-      if (flight_mode==idle){
-        flight_mode=general_test;  
-        Serial.println("Entering General test Mode");      
-      }    
-      
-      
-      pwm_t();on=not on;
-    break;
-
-    case 'd':
-      if (flight_mode==idle){
-        flight_mode=desired_test;  
-        Serial.println("Entering desired test Mode");      
-      }    
-    break;
 
     case 'f'://fly
-      if (flight_mode==orientation_mode||flight_mode==hover){
+      if (flight_mode==orientation_mode){
         flight_mode=flight;   
         Serial.println("Entering flight Mode");     
       }    
     break;
 
-/*
-    case 'h'://hover
-      if (flight_mode==hover){//TODO
-        flight_mode=hover;   
-        Serial.println("Entering hover Mode");     
-      }    
-    break;*/
+
+    
+    
+    case 'P'://fly
+      Serial.print("Adjusting p:");    
+      delay(100);
+      infloat="";
+      while (Serial.available()>0){
+        char inchar=Serial.read( );
+        if  (inchar != '\n') infloat+=inchar;
+      }
+      kroll.kp=infloat.toFloat();
+      kpitch.kp=infloat.toFloat();
+      //print_PidConstants(kroll);  
+      //print_PidConstants(kpitch);
+    break;
+    
+    case 'I'://fly
+      Serial.print("Adjusting i:");     
+      delay(100);
+      infloat="";
+      while (Serial.available()>0){
+        char inchar=Serial.read( );
+        if  (inchar != '\n') infloat+=inchar;
+      }
+      kroll.ki=infloat.toFloat();
+      kpitch.ki=infloat.toFloat();
+      //print_PidConstants(kroll); 
+      //print_PidConstants(kpitch); 
+    break;
+    
+    case 'D'://fly
+      Serial.print("Adjusting d:");   
+      delay(100);
+      infloat="";
+      while (Serial.available()>0){
+        char inchar=Serial.read( );
+        if  (inchar != '\n') infloat+=inchar;
+      }
+      kroll.kd=infloat.toFloat();
+      kpitch.kd=infloat.toFloat();  
+      //print_PidConstants(kpitch); 
+
+    break;
+
+
+    default:
+      if (flight_mode==idle){
+        flight_mode=general_debug;        
+        Serial.println("Entering debug test Mode");  
+        aux_statechange_enable=false;    
+      }
+    break;
+
       
 
     }
 }
-
-
-
-void get_flight_desired(void){
-
-  desired.roll=desired_raw.roll+offset.roll;  
-  desired.pitch=desired_raw.pitch+offset.pitch;
-  
-  desired.yaw=desired.yaw+desired_raw.yaw;//offset already applied in yaw
-  if (desired.yaw>360.0)desired.yaw-=360;
-  else if(desired.yaw<0.0)desired.yaw+=360;    
-
-  
-  desired.throttle=desired.throttle+desired_raw.throttle;//capped later, leave raw for now
-  
-  
-}
-
-
-
-
-
-void send_telem(float ms){
-  if(ENABLE_WIFI){
-    String str ="";
-    
-    str.concat(start);  
-    str.concat(id[0]);
-    str.concat(ms);
-    str.concat(last);  
-    //client.println(str);
-    //Serial.println(str);
-  
-    
-    if (((float)epoch*LOOP_PERIOD)>=0.5){
-      kill_client();
-      while(1);
-    }
-  }
-  
-}
-
-void kill_client(void){
-  Serial.println("Killing Client");
-  client.stop();
-}
-
-
-
-
-////////////////////////////////////////////
-//SERIAL
-
-
-
-
-
-
-
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -313,7 +245,33 @@ void kill_client(void){
 
 
 /////////////////////////////////////////////////////////////////////////////////
-//WIFI SETUP
+//WIFI
+
+
+int status = WL_IDLE_STATUS;
+
+char ssid[]=SECRET_SSID;
+char pass[]=SECRET_PASS;
+unsigned int localPort = SECRET_PORT;      // local port to listen on
+char servername[]=SECRET_SERVER_IP;  // remote server we will connect to
+
+
+char start='{';
+char last='}';
+char comma=',';
+
+char* id[]={
+  "\"ms\":", //time
+  "\"te\":", //telem
+  "\"cx\":", //measured x
+  "\"cy\":", //measured y
+  "\"cz\":", //measured x
+  "\"dx\":", //desired x
+  "\"dy\":", //desired y
+  "\"dz\":", //desired z
+  "\"dt\":", //desired throttle
+};
+
 void say_hello(void) {
   if(ENABLE_WIFI){
     
@@ -401,14 +359,28 @@ void setup_wifi(void) {
 }
 
 
+void kill_client(void){
+  Serial.println("Killing Client");
+  client.stop();
+}
 
 
-
-
-
-
-
-
-
-
-
+void send_telem(float ms){
+  if(ENABLE_WIFI){
+    String str ="";
+    
+    str.concat(start);  
+    str.concat(id[0]);
+    str.concat(ms);
+    str.concat(last);  
+    //client.println(str);
+    //Serial.println(str);
+  
+    
+    if (((float)epoch*LOOP_PERIOD)>=0.5){
+      kill_client();
+      while(1);
+    }
+  }
+  
+}

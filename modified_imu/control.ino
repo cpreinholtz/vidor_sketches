@@ -4,7 +4,11 @@
 //globals
 //global variables, objects and structs    
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+
 Attitude desired_raw, desired, measured, pid_result;
+Attitude offset={0.0,0.0,0.0,0.0};
+Attitude mid_stick={0.0,0.0,0.0,0.0};
+
 Throttle throttle;
 PidError eroll, epitch, eyaw, eheight;
 PidConstants kroll,kpitch,kyaw, kheight;
@@ -15,21 +19,20 @@ PidConstants kroll,kpitch,kyaw, kheight;
 /////////////////////////////////////////////////
 //ALL (THE BIG HITTERS)
 
-void idle_control(void){
-    set_all_motors(motor_min);   
-}
 
 void throttle_control(void){
     set_all_motors(motor_min);  //TODO 
 }
 
 
-void flight_control(void){
+void flight_control(void){  
   get_measured();
+  get_flight_desired();
   get_all_errors();
   get_all_pid();
   apply_all_errors();
-  send_throttle_to_motors();    
+  send_throttle_to_motors();
+     
 }
 
 void get_all_pid(void){
@@ -77,49 +80,8 @@ void apply_all_errors(){
 }
 
 
-void send_throttle_to_motors(void){
-    if(flight_mode==flight){
-      if (ENABLE_PWM){
-        pwm.setPWM(FL, 0, (int)throttle.fl);   
-        pwm.setPWM(FR, 0, (int)throttle.fr);   
-        pwm.setPWM(BL, 0, (int)throttle.bl);   
-        pwm.setPWM(BR, 0, (int)throttle.br);  
-      } 
-    }
-    else{
-      set_all_motors(motor_min);
-    }
-
-}
 
 
-void set_all_motors(int value){
-  if (ENABLE_PWM){
-    if (value<=motor_min){
-      pwm.setPWM(FL, 0, motor_min);   
-      pwm.setPWM(FR, 0, motor_min);   
-      pwm.setPWM(BR, 0, motor_min);   
-      pwm.setPWM(BL, 0, motor_min);       
-    }
-    else if( value>=motor_max){
-      pwm.setPWM(FL, 0, motor_max);   
-      pwm.setPWM(FR, 0, motor_max);   
-      pwm.setPWM(BL, 0, motor_max);   
-      pwm.setPWM(BR, 0, motor_max);    
-    }
-    else{
-      pwm.setPWM(FL, 0, value);   
-      pwm.setPWM(FR, 0, value);   
-      pwm.setPWM(BL, 0, value);   
-      pwm.setPWM(BR, 0, value);  
-
-
-      
-    }
-  }
-
-  
-}
 
 void pwm_t(void){
 
@@ -151,13 +113,13 @@ void get_single_error(PidError & err, float temp ){
   //else if(measured-desired>180.0)desied+=180.0;
   
   //float temp=measure-desire;
-  err.d=temp-err.p;
+  err.d=(temp-err.p)/LOOP_PERIOD;
   
   err.p=temp;
   //if(!liftoff){
    // err.i=0.0;
   //}else{
-    err.i+=temp;
+    err.i+=temp*LOOP_PERIOD;
     if (err.i>=i_error_max)err.i=i_error_max;
     else if (err.i<=-i_error_max)err.i=-i_error_max;
   //}
@@ -355,27 +317,47 @@ void setup_pid(void){
   measured.roll=0.0;
   measured.pitch=0.0;
   measured.yaw=0.0;
+
+
+
+/////////////////////////////////////////////////////////////////
+  float kp =1.0;   
+  //0.5 feels too weak? no oscillation though 
+  //kp =0.55;  very slow oscilation, probably the best so far
+  //0.7 feels good, oscilation, present
+  //0.6 feels nice with slight oscilation
+  
+  float ki =0.00;//this is multiplied by LOOP_PERIOD
+  //0.35 seems ok, maybe too high, I am getting oscilations
+  //.05 feels too weak? too slow?
+  //.15 feels good with kp = 1.0 and kd = 0.02.  think i need a bit more ki and less kd???
+
+  
+  float kd =0.00;//this is divided by LOOP_PERIOD
+  //better with 0.01
+  //felt ok with 0.02
+//////////////////////////////////////////////////////////
   
   //Tune-able Parameters!!! 
-  kroll.kp=1.0;
-  kroll.ki=0.0 * LOOP_PERIOD;
-  kroll.kd=0.0 / LOOP_PERIOD;    
+  kroll.kp=kp;
+  kroll.ki=ki;
+  kroll.kd=kd;    
   //kroll.min= motor_max-motor_start *  -0.1 ;
   //kroll.max= motor_max-motor_start *   0.1 ;
 
-  kpitch.kp=1.0;
-  kpitch.ki=0.0 * LOOP_PERIOD;
-  kpitch.kd=0.0 / LOOP_PERIOD;
+  kpitch.kp=kp;
+  kpitch.ki=ki;
+  kpitch.kd=kd;
   //kpitch.min= motor_max-motor_start * -0.1 ;
   //kpitch.max= motor_max-motor_start *  0.1 ;
 
-  kyaw.kp=0.2;
+  kyaw.kp=0.00;
   kyaw.ki=0.0 * LOOP_PERIOD;
   kyaw.kd=0.0 / LOOP_PERIOD;
   //kyaw.min= motor_max-motor_start  *  -0.1 ;
   //kyaw.max= motor_max-motor_start *  0.1 ;
 
-  kheight.kp=1.0;
+  kheight.kp=0.0;
   kheight.ki=0.0 * LOOP_PERIOD;
   kheight.kd=0.0 / LOOP_PERIOD;    
   //kheight.min= motor_max-motor_start *  -0.1 ;
@@ -384,21 +366,6 @@ void setup_pid(void){
 }
 
 
-void setup_motors(void){
-  if(ENABLE_PWM){//probably want to just send to low signal to disable esc!!
-    pwm.begin();
-    pwm.setPWMFreq(pwm_frequency);  // This is the maximum PWM frequency
-    set_all_motors(motor_min);
-    
-  }
-  else{
-    Serial.println("No PWM in setup");
-  }
-
-  
-  delay(10);
-  
-}
 
 
 
