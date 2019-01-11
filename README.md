@@ -103,3 +103,100 @@ Thinking in C++:
 https://www.micc.unifi.it/bertini/download/programmazione/TICPP-2nd-ed-Vol-one-printed.pdf
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
+//@code
+
+class PulseTimer{
+private:
+    int rising_edge;    //us
+    int falling_edge;   //us
+    int low_time;      //us
+    int high_time;      //us
+    bool flag; //signals that at least low->high->low has been captured, gets set at every falling edge
+    enum State{
+        low=0,
+        high=1
+    }state;//signals if the current state is high or low. 
+        //used primarily tp prevent the first falling ege from causing issues if it comes before a rising, 
+        //although this shouldn't happent if the isr is only attached to rising in setup...
+    
+public:
+
+    //////////////////
+    //Ctor
+    PulseTimer(void):
+        pin(attachToPin),
+        rising_edge(0),
+        falling_edge(0),
+        high_time(0),
+        low_time(0),
+        state(low)
+        flag(false)    
+    {}; //Ctor noop for now (besides initialization)
+    
+    
+    //////////////////
+    //Rise and fall (called from ISR, etc)
+    void rise(void){
+        //if (state==low){
+            rising_edge = micros();
+            low_time = rising_edge - falling_edge;  
+            //state=high;
+        //}
+    };
+    void fall(void){
+        //if (state==high){
+            falling_edge = micros();  
+            high_time = falling_edge - rising_edge;
+            flag=true;
+           // state=low;
+        //}
+    }  
+    
+    
+    //////////////////
+    //getters
+    int high_time(void)const{
+        return high_time;
+    }
+    
+    bool flag(void)const{
+        return flag;
+    }
+    
+    //////////////////
+    //setters
+    void clear_flag(void){
+        flag=false;
+    }
+
+}
+
+
+PulseTimer auxPulseTimer, throttlePulseTimer;
+
+
+//AUX ISRs
+void aux_rising_isr(void) {
+  attachInterrupt(AUX_PIN, aux_falling_isr, FALLING);
+  auxPulseTimer.rise();
+} 
+void aux_falling_isr(void) {
+  attachInterrupt(AUX_PIN, aux_rising_isr, RISING);
+  auxPulseTimer.fall(); 
+}
+
+
+
+
+//timing and printing...
+void handle_intrupt_flags(void){
+  
+  if (throttlePulseTimer.flag()){
+    throttlePulseTimer.clear_flag();
+    controller_connected=true;
+    watchdog= millis();
+  }
+}
+//@endcode
+
