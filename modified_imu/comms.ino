@@ -19,20 +19,23 @@ WiFiClient client;
 
 void get_flight_desired(void){
 
-  desired.roll=desired_raw.roll+offset.roll;  
-  desired.pitch=desired_raw.pitch+offset.pitch;
-  
+  //probably time to rethink yaw... new controller
   desired.yaw=desired.yaw+desired_raw.yaw;//offset already applied in yaw
   if (desired.yaw>360.0)desired.yaw-=360;
   else if(desired.yaw<0.0)desired.yaw+=360;    
 
   
   if ( ENABLE_RC_RECIEVER ==true and controller_connected==true){
-    desired.throttle=map(throttle_in.high_time,  throttle_in_min, throttle_in_max,  motor_min, motor_max);  
-   
+    //desired.throttle=map(throttle_in.high_time,  throttle_in_min, throttle_in_max,  motor_min, motor_max);
+    desired.throttle=map(throttle_in.high_time,  mid_stick.throttle, throttle_in_max,  motor_min, motor_max);
+    desired.roll=float(map(roll_in.high_time,  mid_stick.roll-stick_travel, mid_stick.roll+stick_travel,  craft_angle_min, craft_angle_max))+offset.roll;
+    desired.pitch=float(map(pitch_in.high_time,  mid_stick.pitch-stick_travel, mid_stick.pitch+stick_travel,  craft_angle_min, craft_angle_max))+offset.pitch;
+    
   }
   else{
-    desired.throttle=desired.throttle+desired_raw.throttle;//capped later, leave raw for now
+    desired.throttle=desired.throttle+desired_raw.throttle;//capped later, leave raw for now  
+    desired.roll=desired_raw.roll+offset.roll;  
+    desired.pitch=desired_raw.pitch+offset.pitch;
   }
   
   
@@ -129,8 +132,17 @@ static void get_desired_serial(void){
       set_all_motors(motor_min);
       flight_mode=idle;
       desired.throttle=motor_min;      
-      Serial.println("Entering IDLE Mode");
+      Serial.println("Entering IDLE Mode, state chage disabled without K");
       aux_statechange_enable=false;
+    break;
+    case 'K':
+      set_all_motors(motor_min);
+      flight_mode=idle;
+      desired.throttle=motor_min; 
+      if (aux_in.high_time<aux_in_idle && controller_connected){
+        aux_statechange_enable=true;     
+        Serial.println("Allowing aux state change enable");
+      }
     break;
     case 'c'://calibration
       if (flight_mode==idle){
@@ -147,7 +159,7 @@ static void get_desired_serial(void){
       if (flight_mode==idle){
         flight_mode=orientation_mode;     
         Serial.println("Entering orientation_mode Mode");
-        aux_statechange_enable=true;
+        //aux_statechange_enable=true;
       }    
     break;
 
@@ -169,7 +181,7 @@ static void get_desired_serial(void){
 
     
     
-    case 'p'://fly
+    case 'P'://fly
       Serial.print("Adjusting p:");    
       delay(100);
       infloat="";
@@ -183,7 +195,7 @@ static void get_desired_serial(void){
       //print_PidConstants(kpitch);
     break;
     
-    case 'i'://fly
+    case 'I'://fly
       Serial.print("Adjusting i:");     
       delay(100);
       infloat="";
@@ -197,7 +209,7 @@ static void get_desired_serial(void){
       //print_PidConstants(kpitch); 
     break;
     
-    case 'd'://fly
+    case 'D'://fly
       Serial.print("Adjusting d:");   
       delay(100);
       infloat="";

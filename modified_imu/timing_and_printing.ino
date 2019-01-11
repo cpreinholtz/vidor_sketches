@@ -7,7 +7,7 @@ const float watchdog_timeout=80.0;//ms
 
 float watchdog=0.0;
 bool controller_connected=false;
-bool throttle_isr_flag=false, aux_isr_flag=false;
+bool throttle_isr_flag=false, aux_isr_flag=false, roll_isr_flag=false, pitch_isr_flag=false, yaw_isr_flag=false;
 bool aux_statechange_enable = true;
 
 
@@ -42,11 +42,11 @@ void handle_intrupt_flags(void){
   
   static float aux_in_avg =0.0;
   if (aux_isr_flag){
-    if (aux_statechange_enable=true){
-      aux_isr_flag=false;      
-      aux_in_avg= aux_in_avg*0.8+ float(aux_in.high_time)*0.2;
+    
+    aux_isr_flag=false;      
+    aux_in_avg= aux_in_avg*0.8+ float(aux_in.high_time)*0.2;
 
-      
+    if (aux_statechange_enable==true){
       if ( aux_in_avg<aux_in_idle){
         if (  flight_mode == flight || flight_mode == orientation_mode){
           flight_mode=idle; 
@@ -65,6 +65,7 @@ void handle_intrupt_flags(void){
           Serial.print(aux_in_avg); Serial.println(" Aux to flight!");
         }
       }
+    
     }    
   }  
 }
@@ -219,6 +220,25 @@ void print_aux_in(){
       Serial.print("falling_edge_uS: ");Serial.println(aux_in.falling_edge);
 }
 
+void print_roll_in(){
+      Serial.print("high_time_uS: ");Serial.print(roll_in.high_time);Serial.print("\t\t");
+      Serial.print("low_time_uS: ");Serial.print(roll_in.low_time);Serial.print("\t\t");
+      Serial.print("rising_edge_uS: ");Serial.print(roll_in.rising_edge);Serial.print("\t\t");
+      Serial.print("falling_edge_uS: ");Serial.println(roll_in.falling_edge);
+}
+
+void print_pitch_in(){
+      Serial.print("high_time_uS: ");Serial.print(pitch_in.high_time);Serial.print("\t\t");
+      Serial.print("low_time_uS: ");Serial.print(pitch_in.low_time);Serial.print("\t\t");
+      Serial.print("rising_edge_uS: ");Serial.print(pitch_in.rising_edge);Serial.print("\t\t");
+      Serial.print("falling_edge_uS: ");Serial.println(pitch_in.falling_edge);
+}
+void print_yaw_in(){
+      Serial.print("high_time_uS: ");Serial.print(yaw_in.high_time);Serial.print("\t\t");
+      Serial.print("low_time_uS: ");Serial.print(yaw_in.low_time);Serial.print("\t\t");
+      Serial.print("rising_edge_uS: ");Serial.print(yaw_in.rising_edge);Serial.print("\t\t");
+      Serial.print("falling_edge_uS: ");Serial.println(yaw_in.falling_edge);
+}
 
 
 /////////////////////////////////////

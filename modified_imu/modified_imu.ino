@@ -71,7 +71,7 @@ void dostuff(void){
     case flight:
       motor_arm=true;
       flight_control();
-      //print_x();
+      print_measured();
     break;  
     
 ////////////////////////////////////
@@ -95,24 +95,32 @@ void dostuff(void){
       motor_arm=false;
       flight_control();      
       switch(command){
-        //already used characters: pid kof mc
-        //used here: xyz tT ds
+        //already used characters: //PID //kKof //mc
+
         
-        case'x':
+        case'X':
           print_eroll(); break;          
-        case'y':
+        case'Y':
           print_epitch(); break;
-        case'z':
+        case'Z':
           print_eyaw(); break;
           
-        case't':
-          print_throttle(); break;
         case'T':
+          print_throttle(); break;
+          
+        case't':
           print_throttle_in(); break;
         case'a':
           print_aux_in(); break;
+        case'r':
+          print_roll_in(); break;
+        case'p':
+          print_pitch_in(); break;
+        case'y':
+          print_yaw_in(); break;
           
-        case 'D':
+          
+        case 'd':
           print_desired();break;
         case 's':
           print_measured();break;

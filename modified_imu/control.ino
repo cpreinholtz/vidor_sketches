@@ -4,7 +4,11 @@
 //globals
 //global variables, objects and structs    
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+
 Attitude desired_raw, desired, measured, pid_result;
+Attitude offset={0.0,0.0,0.0,0.0};
+Attitude mid_stick={0.0,0.0,0.0,0.0};
+
 Throttle throttle;
 PidError eroll, epitch, eyaw, eheight;
 PidConstants kroll,kpitch,kyaw, kheight;
@@ -109,13 +113,13 @@ void get_single_error(PidError & err, float temp ){
   //else if(measured-desired>180.0)desied+=180.0;
   
   //float temp=measure-desire;
-  err.d=temp-err.p;
+  err.d=(temp-err.p)/LOOP_PERIOD;
   
   err.p=temp;
   //if(!liftoff){
    // err.i=0.0;
   //}else{
-    err.i+=temp;
+    err.i+=temp*LOOP_PERIOD;
     if (err.i>=i_error_max)err.i=i_error_max;
     else if (err.i<=-i_error_max)err.i=-i_error_max;
   //}
@@ -314,18 +318,36 @@ void setup_pid(void){
   measured.pitch=0.0;
   measured.yaw=0.0;
 
-  float kp =0.5;
+
+
+/////////////////////////////////////////////////////////////////
+  float kp =1.0;   
+  //0.5 feels too weak? no oscillation though 
+  //kp =0.55;  very slow oscilation, probably the best so far
+  //0.7 feels good, oscilation, present
+  //0.6 feels nice with slight oscilation
+  
+  float ki =0.00;//this is multiplied by LOOP_PERIOD
+  //0.35 seems ok, maybe too high, I am getting oscilations
+  //.05 feels too weak? too slow?
+  //.15 feels good with kp = 1.0 and kd = 0.02.  think i need a bit more ki and less kd???
+
+  
+  float kd =0.00;//this is divided by LOOP_PERIOD
+  //better with 0.01
+  //felt ok with 0.02
+//////////////////////////////////////////////////////////
   
   //Tune-able Parameters!!! 
   kroll.kp=kp;
-  kroll.ki=0.0 * LOOP_PERIOD;
-  kroll.kd=0.0 / LOOP_PERIOD;    
+  kroll.ki=ki;
+  kroll.kd=kd;    
   //kroll.min= motor_max-motor_start *  -0.1 ;
   //kroll.max= motor_max-motor_start *   0.1 ;
 
   kpitch.kp=kp;
-  kpitch.ki=0.0 * LOOP_PERIOD;
-  kpitch.kd=0.0 / LOOP_PERIOD;
+  kpitch.ki=ki;
+  kpitch.kd=kd;
   //kpitch.min= motor_max-motor_start * -0.1 ;
   //kpitch.max= motor_max-motor_start *  0.1 ;
 

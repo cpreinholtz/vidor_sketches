@@ -5,7 +5,7 @@
 
 
 
-Attitude offset={0.0,0.0,0.0};
+
 
 Icart gyro_raw, acc_raw, mag_raw;
 

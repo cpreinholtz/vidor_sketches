@@ -1,6 +1,6 @@
 #include "configs.h"
 
-const float G = 0.7;         // complementary filter constant
+const float G = 0.96;         // complementary filter constant
 const float A = (1-G);        // complementary filter constant
 
 
@@ -64,6 +64,11 @@ void calc_offsets(void){
   offset.pitch=offset.pitch*mult+cfilter.y*(1-mult);
   offset.yaw=offset.yaw*mult+cfilter.z*(1-mult);
 
+  mid_stick.roll=roll_in.high_time*0.5+mid_stick.roll*0.5;
+  mid_stick.pitch=pitch_in.high_time*0.5+mid_stick.pitch*0.5;
+  mid_stick.yaw=yaw_in.high_time*0.5+mid_stick.yaw*0.5;
+  mid_stick.throttle=throttle_in.high_time*0.5+mid_stick.throttle*0.5;
+  
   desired.roll=offset.roll;
   desired.pitch=offset.pitch;
   desired.yaw=offset.yaw;
