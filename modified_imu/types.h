@@ -53,7 +53,7 @@ struct attitude_and_power  //type
    float yaw;
    float throttle;
 };
-typedef struct attitude_and_power AttitudeAndPower;  
+typedef struct attitude_and_power ControlState;  
 
 
 struct fcartesian  //type
