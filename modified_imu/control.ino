@@ -2,16 +2,37 @@
 #include "configs.h"
 
 //globals
+//constants
+/////////////////////////////////////////////////////////////////
+  const float kp =1.0;   
+  //0.5 feels too weak? no oscillation though 
+  //kp =0.55;  very slow oscilation, probably the best so far
+  //0.7 feels good, oscilation, present
+  //0.6 feels nice with slight oscilation
+  
+  const float ki =0.00;//this is multiplied by LOOP_PERIOD
+  //0.35 seems ok, maybe too high, I am getting oscilations
+  //.05 feels too weak? too slow?
+  //.15 feels good with kp = 1.0 and kd = 0.02.  think i need a bit more ki and less kd???
+
+  
+  const float kd =0.00;//this is divided by LOOP_PERIOD
+  //better with 0.01
+  //felt ok with 0.02
+//////////////////////////////////////////////////////////
+
 //global variables, objects and structs    
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
-Attitude desired_raw, desired, measured, pid_result;
-Attitude offset={0.0,0.0,0.0,0.0};
-Attitude mid_stick={0.0,0.0,0.0,0.0};
+Attitude measured, pid_result;
+Attitude offset={0.0,0.0,0.0};
+
+AttitudeAndPower desired_raw, desired;
+AttitudeAndPower mid_stick={0.0,0.0,0.0,0.0};
 
 Throttle throttle;
 PidError eroll, epitch, eyaw, eheight;
-PidConstants kroll,kpitch,kyaw, kheight;
+PidConstants kroll, kpitch, kyaw, kheight;
 
 
 
@@ -20,27 +41,20 @@ PidConstants kroll,kpitch,kyaw, kheight;
 //ALL (THE BIG HITTERS)
 
 
-void throttle_control(void){
-    set_all_motors(motor_min);  //TODO 
-}
+
 
 
 void flight_control(void){  
-  get_measured();
-  get_flight_desired();
+  get_measured();//handled in sensor.ino
+  get_flight_desired();//handled in comms.ino
   get_all_errors();
   get_all_pid();
   apply_all_errors();
-  send_throttle_to_motors();
+  send_throttle_to_motors();//handled in motor.ino
      
 }
 
-void get_all_pid(void){
-  pid_result.roll=get_pid_result(eroll,kroll);
-  pid_result.pitch=get_pid_result(epitch,kpitch);  
-  pid_result.yaw=get_pid_result(eyaw,kyaw);
-  
-}
+
 
 //gets errors for Attitudes
 void get_all_errors(void){
@@ -52,16 +66,12 @@ void get_all_errors(void){
 }
 
 
-float normalise(float e){//d, float m){
 
-  //float e=m-d;
-
-  if (e>180.0)e=e-360;
-  else if (e<-180.0)e=e+360;
-  return e;
-
+void get_all_pid(void){
+  pid_result.roll=get_pid_result(eroll,kroll);
+  pid_result.pitch=get_pid_result(epitch,kpitch);  
+  pid_result.yaw=get_pid_result(eyaw,kyaw);  
 }
-
 
 
 //gets (kp*p+ki*i+kd*d) and applies corrections to all throttle values
@@ -82,28 +92,10 @@ void apply_all_errors(){
 
 
 
+//////////////////////////////////////////
+//Subroutines
+//////////////////////////////////////////
 
-void pwm_t(void){
-
-  if (not on){
-    int channel=0;
-    int val=4096;
-    for (channel=0; channel<16;channel++){    
-      pwm.setPWM(channel, val, 0);  
-      Serial.print("setting_motor_to all on:"); Serial.print(val);
-      Serial.println();
-    }   
-  }
-  else if (on){
-    int channel=0;
-    int val=4096;
-    for (channel=0; channel<16;channel++){    
-      pwm.setPWM(channel, 0,val);  
-      Serial.print("setting_motor_to all off:"); Serial.print(val);
-      Serial.println();
-    }   
-  }
-}
 
 ///////////////////////////////////////////////////////
 //ERROR AND PID
@@ -123,6 +115,16 @@ void get_single_error(PidError & err, float temp ){
     if (err.i>=i_error_max)err.i=i_error_max;
     else if (err.i<=-i_error_max)err.i=-i_error_max;
   //}
+}
+
+float normalise(float e){//d, float m){
+
+  //float e=m-d;
+
+  if (e>180.0)e=e-360;
+  else if (e<-180.0)e=e+360;
+  return e;
+
 }
 
 /*
@@ -171,17 +173,7 @@ void apply_roll(){
   
   throttle.fr+=pid_result.roll;
   throttle.br+=pid_result.roll;
-
-/*
-  
-  if (res>0.0){   //roll right for + desired roll
-    throttle.fl+=pid_result.roll;
-    throttle.bl+=res;
-  }
-  else{
-    throttle.fr+=res;
-    throttler.br+=res;
-  }     */       
+     
 }
 
 //front/back 
@@ -194,16 +186,6 @@ void apply_pitch(){
   throttle.bl+=pid_result.pitch;
   throttle.br+=pid_result.pitch;
 
-
-  /*
-  if (res>0.0){   //pitch forward up for + desired pitch
-    throttle.fl+=res;
-    throttle.fr+=res;
-  }
-  else{
-    throttle.bl+=res;
-    throttle.br+=res;
-  }     */       
 }
 
 //opposites
@@ -219,17 +201,9 @@ void apply_yaw(){
   throttle.bl-=pid_result.yaw;
   
 
-  
-  /*
-  if (res>0.0){   // yaw cw for + desired heading
-    throttle.fr+=res;//fr spins ccw,
-    throttle.bl+=res;//bl spins ccw,
-  }
-  else{
-    throttle.fl+=res; //fl spins cw, 
-    throttle.br+=res; //br spins cw, 
-  }   */         
+   
 }
+
 /*
 //all4
 void apply_height(Throttle &throt, float res){
@@ -259,10 +233,35 @@ void limit_throttle(void){
 
 
     
-   
+///////////////////////////////////////////////////////
+//DEBUG ONLY
     
-    
-    
+void throttle_control(void){
+  set_all_motors(motor_min);  //TODO 
+}
+
+
+void pwm_t(void){
+
+  if (not on){
+    int channel=0;
+    int val=4096;
+    for (channel=0; channel<16;channel++){    
+      pwm.setPWM(channel, val, 0);  
+      Serial.print("setting_motor_to all on:"); Serial.print(val);
+      Serial.println();
+    }   
+  }
+  else if (on){
+    int channel=0;
+    int val=4096;
+    for (channel=0; channel<16;channel++){    
+      pwm.setPWM(channel, 0,val);  
+      Serial.print("setting_motor_to all off:"); Serial.print(val);
+      Serial.println();
+    }   
+  }
+}
     
 /////////////////////////////////////////////////
 //CALIBRATION    
@@ -317,26 +316,6 @@ void setup_pid(void){
   measured.roll=0.0;
   measured.pitch=0.0;
   measured.yaw=0.0;
-
-
-
-/////////////////////////////////////////////////////////////////
-  float kp =1.0;   
-  //0.5 feels too weak? no oscillation though 
-  //kp =0.55;  very slow oscilation, probably the best so far
-  //0.7 feels good, oscilation, present
-  //0.6 feels nice with slight oscilation
-  
-  float ki =0.00;//this is multiplied by LOOP_PERIOD
-  //0.35 seems ok, maybe too high, I am getting oscilations
-  //.05 feels too weak? too slow?
-  //.15 feels good with kp = 1.0 and kd = 0.02.  think i need a bit more ki and less kd???
-
-  
-  float kd =0.00;//this is divided by LOOP_PERIOD
-  //better with 0.01
-  //felt ok with 0.02
-//////////////////////////////////////////////////////////
   
   //Tune-able Parameters!!! 
   kroll.kp=kp;
