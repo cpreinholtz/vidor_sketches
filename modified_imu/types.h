@@ -41,9 +41,19 @@ struct attitude  //type
    float roll;
    float pitch;
    float yaw;
-   float throttle;
+   //float throttle;
 };
 typedef struct attitude Attitude;    
+
+
+struct attitude_and_power  //type
+{
+   float roll;
+   float pitch;
+   float yaw;
+   float throttle;
+};
+typedef struct attitude_and_power AttitudeAndPower;  
 
 
 struct fcartesian  //type
