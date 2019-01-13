@@ -147,6 +147,16 @@ void print_attitude(Attitude a){
   Serial.print("roll: ");Serial.print(a.roll);Serial.print("\t\t");
   Serial.print("pitch: ");Serial.print(a.pitch);Serial.print("\t\t");
   Serial.print("yaw: ");Serial.print(a.yaw);Serial.print("\t\t");
+  //Serial.print("throt: ");Serial.print(a.throttle);Serial.print("\t\t");
+  Serial.println("");
+
+}
+
+void print_attitude_and_throttle(AttitudeAndThrottle a){
+  
+  Serial.print("roll: ");Serial.print(a.roll);Serial.print("\t\t");
+  Serial.print("pitch: ");Serial.print(a.pitch);Serial.print("\t\t");
+  Serial.print("yaw: ");Serial.print(a.yaw);Serial.print("\t\t");
   Serial.print("throt: ");Serial.print(a.throttle);Serial.print("\t\t");
   Serial.println("");
 
@@ -172,12 +182,12 @@ void print_offset(void){
 }
 void print_desired(void){
   Serial.print("desired ");
-  print_attitude(desired);
+  print_attitude_and_throttle(desired);
 }
 
 void print_desired_raw(void){
   Serial.print("desired_raw ");
-  print_attitude(desired_raw);
+  print_attitude_and_throttle(desired_raw);
 }
 
 
